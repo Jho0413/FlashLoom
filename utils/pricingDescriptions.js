@@ -2,21 +2,21 @@ export const pricingDescriptions = [
     {
         "title": "Free Trial",
         "price": "$0 / month",
-        "description": "Access to 5 flashcard generations. Try it out! No need to Subscribe",
+        "description": "Access to 3 flashcard generations. Try it out! No need to Subscribe",
         "divider": true,
         "fee": 0,
     },
     {
         "title": "Basic",
-        "price": "$5 / month",
-        "description": "Access to basic flashcard features and limited storage.",
+        "price": "$2.99 / month",
+        "description": "Unlimited access to flashcard generations.",
         "divider": true,
         "fee": 5,
     },
     {
         "title": "Pro",
-        "price": "$10 / month",
-        "description": "Unlimited flashcards and storage, with priority support.",
+        "price": "$4.99 / month",
+        "description": "Unlimited access to flashcard generations. More features still in development.",
         "divider": false,
         "fee": 10,
     }

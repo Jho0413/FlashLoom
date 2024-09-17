@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyANdssX4hGdcfHvXD52cNqBNp1g7uM4tgE",
+  apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "flashloom.firebaseapp.com",
   projectId: "flashloom",
   storageBucket: "flashloom.appspot.com",

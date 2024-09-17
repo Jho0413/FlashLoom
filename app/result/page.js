@@ -57,7 +57,6 @@ const ResultPage = () => {
                         Thank you for your purchase!
                     </Typography>
                     <Box sx={{mt:22}}>
-                        <Typography variant="h6">Session ID: {session_id}</Typography>
                         <Typography variant="body1"> We have received your payment. You will receive an email with the order details shortly.</Typography>
                     </Box>
                     <Button sx={{mt:2}}variant="contained" onClick={() => router.push('/')}>

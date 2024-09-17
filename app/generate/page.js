@@ -190,13 +190,13 @@ export default function Generate() {
             }}
           />
           <TextField
-            value={text}
+            value={youtubeURL}
             onChange={(e) => setYoutubeURL(e.target.value)}
-            label="Enter text"
+            label="Enter Youtube URL"
             fullWidth
             multiline
             required
-            rows={4}
+            rows={1}
             variant="outlined"
             sx={{ 
               mb: 2, 

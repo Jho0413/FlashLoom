@@ -32,6 +32,7 @@ export default function Generate() {
   const { user } = useUser(); 
   const router = useRouter(); 
   const [text, setText] = useState("");
+  const [youtubeURL, setYoutubeURL] = useState("");
   const [flashcards, setFlashcards] = useState([]);
   const [setName, setSetName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -125,7 +126,7 @@ export default function Generate() {
    try {
      const response = await fetch("/api/generate", {
        method: "POST",
-       body: JSON.stringify({ message: text }),
+       body: JSON.stringify({ message: text, youtubeURL: youtubeURL }),
        headers: {
          "Content-Type": "application/json",
        },
@@ -167,6 +168,30 @@ export default function Generate() {
           <TextField
             value={text}
             onChange={(e) => setText(e.target.value)}
+            label="Enter text"
+            fullWidth
+            multiline
+            required
+            rows={4}
+            variant="outlined"
+            sx={{ 
+              mb: 2, 
+              color: "white",
+              "& .MuiInputLabel-root": {color: 'white'}, 
+              "& .MuiInputLabel-root.Mui-focused": {color: !textFieldError ? "rgb(21, 101, 192)" : "red"},
+              "& .MuiOutlinedInput-root": { "& > fieldset": { borderColor: "white" }},
+              "&:hover .MuiOutlinedInput-root": { "& > fieldset": { borderColor: !textFieldError ? "rgb(21, 101, 192)": "red" }},
+            }}
+            error={textFieldError}
+            inputProps={{
+              style: { 
+                color: "white",
+              },
+            }}
+          />
+          <TextField
+            value={text}
+            onChange={(e) => setYoutubeURL(e.target.value)}
             label="Enter text"
             fullWidth
             multiline

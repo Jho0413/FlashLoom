@@ -2,11 +2,16 @@
 // Using Gemini
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { YoutubeTranscript } from "youtube-transcript";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { get_encoding } from "tiktoken";
+import { metadata } from "@/app/layout";
 
-const systemPrompt = (userMessage) => `
+const systemPrompt = (userMessage, content) => `
     You are a flashcard creator. 
     you want to create a flashcard about ${userMessage}. 
     Please provide the question and answer for the flashcard.
+    Here is some additional context: ${content}
     Create only 10 flashcards
 
     Return in the following JSON format:
@@ -26,11 +31,53 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
+const generateFromYoutubeURL = async (youtubeURL) => {
+  const tokenizer = get_encoding("gpt2");
+
+  function tiktokenlen(text) {
+    console.log(text);
+    const tokens = tokenizer.encode(text);
+    return tokens.length;
+  }
+
+  const transcript = await YoutubeTranscript.fetchTranscript(youtubeURL);
+  let allText = ""
+  for (const section of transcript) {
+    allText += section.text + " "
+  }
+
+  const data = {
+    metadata: {
+      'source': youtubeURL.split("v=")[1],
+    },
+    page_content: allText,
+  }
+
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 2000,
+    chunkOverlap: 100,
+    // lengthFunction: tiktokenlen || ((text) => text.length),
+    // separators: ["\n", " ", "\n\n"],
+  });
+
+  // const cleanedTextResponse = await model.generateContent(`Clean this text please but don't change anything else, I want to keep all the content the same. Text: ${allText}`);
+  // const cleanedText = cleanedTextResponse.response.text();
+  // console.log(cleanedText)
+  const texts = await textSplitter.splitText(data.page_content);
+  return texts
+}
 
 export async function POST(req) {
   try {
+    console.log("hello");
     const data = await req.json();
-    const { message: userMessage } = data;
+    const { message: userMessage, youtubeURL } = data;
+    // if (youtubeURL) {
+    //   const allText = await generateFromYoutubeURL(youtubeURL, userMessage);
+    //   return NextResponse.json({ message: allText }, { status: 200 });
+    // }
 
     if (!userMessage) {
       return NextResponse.json(
@@ -39,7 +86,11 @@ export async function POST(req) {
       );
     }
 
-    const prompt = systemPrompt(userMessage);
+    let content = "";
+    if (youtubeURL)
+      content = await generateFromYoutubeURL(youtubeURL, userMessage);
+
+    const prompt = systemPrompt(userMessage, content);
 
     // Log prompt for debugging
     console.log("Generated prompt:", prompt);

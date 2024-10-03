@@ -51,11 +51,10 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
               },
             });
        
-            if (!response.ok) {
-              throw new Error("Failed to generate flashcards");
-            }
-       
             const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error_message);
+            }
             console.log("Generated flashcards:", data); 
             console.log(data.flashcards);
        
@@ -65,13 +64,15 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
               setFlashcards(data.flashcards);
             } else {
               console.error("Unexpected response format:", data);
-              setLoading(false)
-              setError("We have encountered internal errors. Please try again later.");
-              setOpenError(true);
+              throw new Error("We have encountered internal errors. Please try again later.");
             }
         } catch (error) {
             console.error("Error generating flashcards:", error);
-            alert("Please try again.");
+            setLoading(false);
+            setError(error.message);
+            setOpenError(true);
+        } finally {
+          setLoading(false);
         }
     }
 
@@ -179,7 +180,7 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
             sx={{
                 display: "flex",
                 justifyContent: "center",
-                alignItems: "center"
+                alignItems: "center",
             }}
           >
             <Box 
@@ -192,6 +193,7 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
                     gap: 2,
                     padding: 5,
                     borderRadius: 2,
+                    width: "50%",
                 }}
             >
                 <Typography variant="h6">{error}</Typography>

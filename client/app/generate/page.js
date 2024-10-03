@@ -16,8 +16,14 @@ import {
   DialogContentText,
   DialogContent,
   DialogActions,
-  Divider
+  Divider,
+  Tab,
 } from "@mui/material";
+import {
+  TabList,
+  TabPanel,
+  TabContext,
+} from '@mui/lab'
 import {
   doc,
   collection,
@@ -28,17 +34,24 @@ import {
 import { db } from "@/firebase";
 import { useRouter } from "next/navigation";
 import Header from "../components/header";
+import InputField from "../components/inputField";
+import FlashcardForm from "../components/flashcardForm";
 
 export default function Generate() {
   const { user } = useUser(); 
   const router = useRouter(); 
   const [text, setText] = useState("");
-  const [youtubeURL, setYoutubeURL] = useState("");
   const [flashcards, setFlashcards] = useState([]);
   const [setName, setSetName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [flipped, setFlipped] = useState({});
-  const [textFieldError, setTextFieldError] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleTabChange = (event, newTab) => {
+    event.preventDefault();
+    setFormData({});
+    setTabName(newTab);
+  }
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
@@ -110,50 +123,6 @@ export default function Generate() {
     }
   };
 
- const handleSubmit = async () => {
-
-  setTextFieldError(false);
-
-   if (!text.trim()) {
-     alert("Please enter some text to generate flashcards.");
-     setTextFieldError(true);
-     return;
-   }
-  //  const isSubscribed = await checkSubscriptionStatus(user.id);
-  //  if (!isSubscribed) {
-  //   alert("You need an active subscription to generate flashcards.");
-  //   return; // Prevent further execution
-  // }
-   try {
-     const response = await fetch("/api/generate", {
-       method: "POST",
-       body: JSON.stringify({ message: text, youtubeURL: youtubeURL }),
-       headers: {
-         "Content-Type": "application/json",
-       },
-     });
-
-     if (!response.ok) {
-       throw new Error("Failed to generate flashcards");
-     }
-
-     const data = await response.json();
-     console.log("Generated flashcards:", data); 
-
-     if (data.flashcards) {
-       setFlashcards(data.flashcards);
-       setText("");
-     } else {
-       console.error("Unexpected response format:", data);
-       alert("An error occurred. Please try again.");
-     }
-   } catch (error) {
-     console.error("Error generating flashcards:", error);
-     alert("Please try again.");
-   }
- };
-
-
   const handleCardClick = (index) => {
     setFlipped((prev) => ({
       ...prev,
@@ -165,67 +134,10 @@ export default function Generate() {
     <Container maxWidth="100%" sx={{ backgroundImage: "linear-gradient(to top,rgb(58, 58, 58), rgb(30, 30, 30))", height: "100vh", overflowY: 'auto' }}>
       <Header />
       <Container maxWidth="md" sx={{ p: 5, mt: 10 }}>
-        <Box sx={{ color: "white", display: "flex", flexDirection: "column", gap: 2 }}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-            Generate Flashcards
-          </Typography>
-          <TextField
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            label="Enter text"
-            fullWidth
-            multiline
-            required
-            rows={4}
-            variant="outlined"
-            sx={{ 
-              mb: 2, 
-              color: "white",
-              "& .MuiInputLabel-root": {color: 'white'}, 
-              "& .MuiInputLabel-root.Mui-focused": {color: !textFieldError ? "rgb(21, 101, 192)" : "red"},
-              "& .MuiOutlinedInput-root": { "& > fieldset": { borderColor: "white" }},
-              "&:hover .MuiOutlinedInput-root": { "& > fieldset": { borderColor: !textFieldError ? "rgb(21, 101, 192)": "red" }},
-            }}
-            error={textFieldError}
-            inputProps={{
-              style: { 
-                color: "white",
-              },
-            }}
-          />
-          <TextField
-            value={youtubeURL}
-            onChange={(e) => setYoutubeURL(e.target.value)}
-            label="Enter Youtube URL"
-            fullWidth
-            multiline
-            required
-            rows={1}
-            variant="outlined"
-            sx={{ 
-              mb: 2, 
-              color: "white",
-              "& .MuiInputLabel-root": {color: 'white'}, 
-              "& .MuiInputLabel-root.Mui-focused": {color: !textFieldError ? "rgb(21, 101, 192)" : "red"},
-              "& .MuiOutlinedInput-root": { "& > fieldset": { borderColor: "white" }},
-              "&:hover .MuiOutlinedInput-root": { "& > fieldset": { borderColor: !textFieldError ? "rgb(21, 101, 192)": "red" }},
-            }}
-            error={textFieldError}
-            inputProps={{
-              style: { 
-                color: "white",
-              },
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            fullWidth
-          >
-            Generate Flashcards
-          </Button>
-        </Box>
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" color="white">
+          Generate Flashcards
+        </Typography>
+        <FlashcardForm setFlashcards={setFlashcards} setFlipped={setFlipped} />
 
         {flashcards.length > 0 && (
           <Box sx={{ mt: 4 }}>

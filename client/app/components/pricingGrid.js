@@ -8,34 +8,43 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { pricingDescriptions } from "../../utils/pricingDescriptions";
 import getStripe from "@/utils/get-stripe";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 
-const PricingGridItem = ({ title, price, description, fee }) => {
+const PricingGridItem = ({ title, price, description, disabled }) => {
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
+
   const selectPlan = async () => {
+    if (disabled) return;
+
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
+    if (title === "Free Trial") {
+      router.push("/generate");
+      return;
+    }
+
     const checkoutSession = await fetch("/api/checkout_sessions", {
       method: "POST",
       headers: {
         origin: "localhost:3000",
-        fee: fee,
-      },
+        plan: title,
+        user: user.id,
+      }
     });
-    const checkoutSessionJson = await checkoutSession.json();
 
-    if (checkoutSession.statusCode == 500) {
-      console.error(checkoutSession.message);
-      return;
-    }
+    const checkoutSessionJSON = await checkoutSession.json();
+    console.dir(checkoutSessionJSON, { depth: null });
 
     const stripe = await getStripe();
-    const { error } = await stripe.redirectToCheckout({
-      sessionId: checkoutSessionJson.id,
-    });
-
-    if (error) {
-      console.warn(error.message);
-    }
+    await stripe.redirectToCheckout({ sessionId: checkoutSessionJSON.id });
   };
 
   return (
@@ -44,11 +53,15 @@ const PricingGridItem = ({ title, price, description, fee }) => {
       xs={12}
       md={4}
       lg={4}
-      sx={{ display: "flex", justifyContent: "center", color: "white" }}
+      sx={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        color: "white" 
+      }}
     >
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={disabled ? {} : { scale: 1.05 }}
+        whileTap={disabled ? {} : { scale: 0.95 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -64,8 +77,9 @@ const PricingGridItem = ({ title, price, description, fee }) => {
             border: "1px solid #333",
             borderRadius: 5,
             backgroundColor: "#1e1e1e",
+            cursor: disabled ? null : "pointer",
             "&:hover": {
-              backgroundColor: "#292929",
+              backgroundColor: disabled ? "#1e1e1e" : "#292929",
             },
           }}
         >
@@ -86,8 +100,9 @@ const PricingGridItem = ({ title, price, description, fee }) => {
             sx={{
               backgroundColor: "#5c84f8",
               "&:hover": {
-                backgroundColor: "#4b72d6",
+                backgroundColor: disabled ? "#5c84f8" : "#4b72d6",
               },
+              cursor: disabled ? "not-allowed" : "pointer",
             }}
           >
             Choose {title}
@@ -124,7 +139,7 @@ const PricingGrid = () => {
       </Typography>
       <Grid container spacing={3}>
         {pricingDescriptions.map((pricing) => (
-          <PricingGridItem key={pricing.title} fee={pricing.fee} {...pricing} />
+          <PricingGridItem key={pricing.title} {...pricing} />
         ))}
       </Grid>
     </Box>

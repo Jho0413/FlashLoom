@@ -35,10 +35,13 @@ export async function POST(req) {
     const userDocRef = doc(db, "users",  userId); // Reference to the user document
     await setDoc(userDocRef, {
         stripeCustomerId: customer.id, // Save the Stripe customer ID
+        subscriptionPlan: "Free",
+        generations: 0,
+        subscriptionEndTime: null,
     }, { merge: true });
 
     console.log(`Stripe customer created: ${customer.id}`);
   }
 
-  return new Response(null, { status: 200 });
+  return NextResponse(null, { status: 200 });
 }

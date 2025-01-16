@@ -1,21 +1,21 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
+import { db } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
- 
-const formatAmountForStripe = (amount) => {
-    return Math.round(amount * 100);
-}
 
 export async function POST(req) {
-    const fee = formatAmountForStripe(req.headers.get('fee'));
-    let product_name;
-    if (fee == 1000) 
-        product_name = 'Pro Subscription';
-    else if (fee == 500)
-        product_name  = 'Basic Subscription';
-    else 
-        product_name = 'Free Trial';
+    const plan = req.headers.get('plan');
+    const userId = req.headers.get('user');
+
+    const docRef = doc(db, "users", userId);
+    const docSnap = await getDoc(docRef);
+    const { stripeCustomerId } = docSnap.data();
+
+    let price_id;
+    if (plan === "Basic") 
+        price_id = "price_1QhdEH07wGZ67HqLpHioOEME";
     
     try {
         const params = {
@@ -23,17 +23,11 @@ export async function POST(req) {
             payment_method_types: ['card'],
             line_items: [
             {
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: product_name,
-                    },
-                    unit_amount: fee,
-                    recurring: {interval: 'month', interval_count: 1},
-                },
+                price: price_id,
                 quantity: 1,
             },
             ],
+            customer: stripeCustomerId,
             success_url: `${req.headers.get('origin')}/result?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.get('origin')}/result?session_id={CHECKOUT_SESSION_ID}`,
         };
@@ -41,10 +35,7 @@ export async function POST(req) {
         return NextResponse.json(checkoutSession, { status: 200 });
     } catch (error) {
         console.error('Error creating checkout session:', error)
-        return new NextResponse(
-            JSON.stringify({ error: { message: error.message } }), 
-            { status: 500 }
-        )
+        return new NextResponse.json({ error: error }, { status: 500 });
     }
 }
 

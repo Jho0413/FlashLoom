@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { plans } from "@/utils/plans";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -13,9 +14,7 @@ export async function POST(req) {
     const docSnap = await getDoc(docRef);
     const { stripeCustomerId } = docSnap.data();
 
-    let price_id;
-    if (plan === "Basic") 
-        price_id = "price_1QhdEH07wGZ67HqLpHioOEME";
+    const price_id = plans[plan];
     
     try {
         const params = {

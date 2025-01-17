@@ -65,28 +65,29 @@ export async function GET(req) {
 
         const data = userDoc.data();
         const { subscriptionPlan, subscriptionEndTime, generations } = data;
-        let message;
+        let access;
+        let plan;
         switch (subscriptionPlan) {
             case "Free":
-                if (generations == 3) 
-                    message = "No permission";
-                else
-                    message = "Success";
+                access = generations < 3;
+                plan = "Free"
                 break;
             case plans["Basic"]:
                 const currentUnixTime = Math.floor(Date.now() / 1000);
-                if (currentUnixTime <= subscriptionEndTime)
-                    message = "Success";
-                else {
+                if (currentUnixTime <= subscriptionEndTime) {
+                    access = true;
+                    plan = "Basic";
+                } else {
                     await updateDoc(userRef, {
                         subscriptionPlan: "Free",
                         subscriptionEndTime: null
                     });
-                    message = generations == 3 ? "No permission" : "Success";
+                    access = generations < 3;
+                    plan = "Free";
                 }
                 break;
         }
-        return NextResponse.json({ message: message }, { status: 200 });
+        return NextResponse.json({ access: access, plan: plan, generations: generations }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: error }, { status: 500 });
     }

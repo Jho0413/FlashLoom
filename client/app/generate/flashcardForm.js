@@ -13,13 +13,15 @@ import {
     TabPanel,
     TabList
 } from "@mui/lab"
-import InputField from "./inputField"
+import InputField from "../components/inputField"
 import { useEffect, useState } from "react"
 import BuildIcon from '@mui/icons-material/Build';
+import { useUser } from "@clerk/nextjs"
 
-const FlashcardForm = ({ setFlashcards, setFlipped }) => {
-
+const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
+    const { user } = useUser();
     const [formData, setFormData] = useState({});
+    const [file, setFile] = useState(null);
     const [tabName, setTabName] = useState("Basic");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -35,20 +37,38 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
         setOpenError(false);
     }
 
-    useEffect(() => {
-        console.log(JSON.stringify(formData))
-    }, [formData]);
+    const handleFileUpload = (e) => {
+      e.preventDefault();
+      const file = e.target.files?.[0];
+      if (file && file.type && file.type === 'application/pdf') {
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          [e.target.name]: file,
+        }));
+      } else {
+        setError("Upload a valid pdf file");
+        setOpenError(true);
+        e.target.value = '';
+      }
+    }
 
     const handleSubmit = async () => {
         setLoading(true);
         console.log({...formData});
+        console.log(file);
         try {
+            const uploadData = new FormData();
+
+            // Append the form data to the FormData object
+            for (const key in formData) {
+              uploadData.append(key, formData[key]);
+            }
+            
+            // Add any other fields you want to include in the form data
+            uploadData.append('method', tabName);
             const response = await fetch("/api/generate", {
               method: "POST",
-              body: JSON.stringify({...formData, "method": tabName}),
-              headers: {
-                "Content-Type": "application/json",
-              },
+              body: { ...uploadData },
             });
        
             const data = await response.json();
@@ -59,7 +79,7 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
             console.log(data.flashcards);
        
             if (data.flashcards) {
-              setFlipped({});
+              setFlippedStates({});
               setLoading(false);
               setFlashcards(data.flashcards);
             } else {
@@ -121,14 +141,13 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
               />
             </TabPanel>
             <TabPanel value="PDF">
-              <InputField 
-                  name="pdf_file"
-                  label="Enter your pdf"
-                  rows={4}
-                  value={formData}
-                  setValue={setFormData}
-                  required={true}
-              />
+              <form>
+                <input 
+                  type="file"
+                  name="file"
+                  onChange={handleFileUpload}
+                />
+              </form>
               <InputField 
                 name="message"
                 label="Enter additional information for better generation (Optional)"
@@ -164,13 +183,8 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: "white",
-                    gap: 2,
-                    padding: 5,
-                    borderRadius: 2,
                 }}
             >
-                <Typography variant="h6">Please wait a moment</Typography>
                 <CircularProgress />
             </Box>
           </Modal>
@@ -191,9 +205,9 @@ const FlashcardForm = ({ setFlashcards, setFlipped }) => {
                     alignItems: "center",
                     backgroundColor: "white",
                     gap: 2,
-                    padding: 5,
+                    padding: 3,
                     borderRadius: 2,
-                    width: "50%",
+                    maxWidth: "50%",
                 }}
             >
                 <Typography variant="h6">{error}</Typography>

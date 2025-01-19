@@ -38,6 +38,8 @@ export async function POST(req) {
         subscriptionPlan: "Free",
         generations: 0,
         subscriptionEndTime: null,
+        subscriptionId: null,
+        cancelled: false,
     }, { merge: true });
 
     console.log(`Stripe customer created: ${customer.id}`);

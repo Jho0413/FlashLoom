@@ -8,10 +8,10 @@ export async function POST(req) {
     try {
         event = await req.json();
     } catch (err) {
-        return new Response(`Webhook Error: ${err.message}`, { status: 404 });
+        return NextResponse.json({ error: err }, { status: 404 });
     }
     const { data, type } = event;
-    const { current_period_end, plan, customer: stripeCustomerId, status } = data.object;
+    const { id, current_period_end, plan, customer: stripeCustomerId, status } = data.object;
     const userCollection = collection(db, "users");
     const userQuery = query(userCollection, where("stripeCustomerId", "==", stripeCustomerId));
     try {
@@ -31,6 +31,7 @@ export async function POST(req) {
                     await updateDoc(docRef, {
                         subscriptionEndTime: current_period_end,
                         subscriptionPlan: plan.id,
+                        subscriptionId: id,
                     });
                 else if (status === "past_due" || status === "unpaid" || status === "cancelled") 
                     await updateDoc(docRef, {
@@ -41,6 +42,7 @@ export async function POST(req) {
             case "customer.subscription.deleted":
                 await updateDoc(docRef, {
                     subscriptionPlan: "Free",
+                    subscriptionEndTime: null,
                 });
                 break;
         }
@@ -64,7 +66,7 @@ export async function GET(req) {
             throw new Error("User not found in the database");
 
         const data = userDoc.data();
-        const { subscriptionPlan, subscriptionEndTime, generations } = data;
+        const { subscriptionPlan, subscriptionEndTime, generations, cancelled } = data;
         let access;
         let plan;
         switch (subscriptionPlan) {
@@ -87,7 +89,7 @@ export async function GET(req) {
                 }
                 break;
         }
-        return NextResponse.json({ access: access, plan: plan, generations: generations }, { status: 200 });
+        return NextResponse.json({ access: access, plan: plan, generations: generations, cancelled: cancelled, subscriptionEndTime: subscriptionEndTime }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: error }, { status: 500 });
     }

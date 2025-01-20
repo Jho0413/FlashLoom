@@ -1,5 +1,5 @@
 import { db } from "@/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -21,12 +21,6 @@ export async function POST(req) {
         await stripe.subscriptions.update(subscriptionId, {
             cancel_at_period_end: true
         });
-
-        // updating firestore 
-        await updateDoc(userRef, {
-            cancelled: true
-        });
-        
         return NextResponse.json({ message: "successful cancellation" }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

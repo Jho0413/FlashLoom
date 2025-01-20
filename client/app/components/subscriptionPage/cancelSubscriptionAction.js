@@ -133,7 +133,7 @@ const CancelSubscriptionAction = ({ cancelled }) => {
         }}
       >
         <Typography fontWeight="500" fontSize="0.8125rem" color="rgb(33, 33, 38)">
-          Type "Cancel Subscription" below to continue
+          Type &quot;Cancel Subscription&quot; below to continue
         </Typography>
         <Box>
           <input

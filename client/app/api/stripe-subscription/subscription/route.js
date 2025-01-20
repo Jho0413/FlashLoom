@@ -11,7 +11,7 @@ export async function POST(req) {
         return NextResponse.json({ error: err }, { status: 404 });
     }
     const { data, type } = event;
-    const { id, current_period_end, plan, customer: stripeCustomerId, status } = data.object;
+    const { id, current_period_end, plan, customer: stripeCustomerId, status, cancel_at_period_end } = data.object;
     const userCollection = collection(db, "users");
     const userQuery = query(userCollection, where("stripeCustomerId", "==", stripeCustomerId));
     try {
@@ -27,18 +27,28 @@ export async function POST(req) {
         const docRef = doc(db, "users", userId);
         switch (type) {
             case "customer.subscription.updated":
+                // user cancelling their subscription
+                if (cancel_at_period_end) {
+                    await updateDoc(docRef, {
+                      cancelled: true,
+                    });
+                    break;
+                }
+                // subscription becomes active again
                 if (status === "active") 
                     await updateDoc(docRef, {
                         subscriptionEndTime: current_period_end,
                         subscriptionPlan: plan.id,
                         subscriptionId: id,
                     });
-                else if (status === "past_due" || status === "unpaid" || status === "cancelled") 
+                // subscription failed payment
+                else if (status === "past_due" || status === "unpaid") 
                     await updateDoc(docRef, {
                         subscriptionEndTime: null,
                         subscriptionPlan: "Free",
                     });
                 break; 
+            // subscription ended
             case "customer.subscription.deleted":
                 await updateDoc(docRef, {
                     subscriptionPlan: "Free",

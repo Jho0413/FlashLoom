@@ -1,40 +1,50 @@
-import {
-  Container,
-} from "@mui/material";
-import Header from "../components/header";
+"use client"
+
+import { Box } from "@mui/material";
 import GenerateFlashcardBody from "./generateFlashcardBody";
 import PermissionDialog from "./permissionDialog";
+import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
+import ErrorPage from "../components/errorPage";
+import LoadingPage from "../components/loadingPage";
 
-export default async function GeneratePage({ searchParams }) {
-  const { userId } = searchParams;
-  let userAccess;
-  let userPlan;
+const GeneratePage = () => {
+  const { user } = useUser();
 
-  try {
-    const response = await fetch(`http://localhost:3000/api/stripe-subscription?userId=${userId}`,
-      {
-        method: "GET",
-        headers: { "Cache-Control": "no-cache" }
-      }
-    );
+  const fetchSubscriptionData = async () => {
+    const response = await fetch(`/api/stripe-subscription/subscription?userId=${user.id}`, {
+      cache: "default",
+    });
+
     if (!response.ok) {
-      throw new Error("Failed to get subscription");
+        throw new Error("Unable to find subscription information");
     }
     const data = await response.json();
-    console.log(data);
-    const { access, plan } = data;
-    userAccess = access;
-    userPlan = plan;
-
-  } catch (error) {
-    console.error("Hello");
+    return data;
   }
 
+  const { isPending, isError, data: subscriptionData, error } = useQuery({
+    queryKey: ["subscriptionData"],
+    queryFn: fetchSubscriptionData,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  if (isPending) {
+    return <LoadingPage />;
+  }
+
+  if (isError) {
+    return <ErrorPage />;
+  }
+
+  const { access, plan, generations } = subscriptionData;
+
   return (
-    <Container maxWidth="100%" sx={{ backgroundImage: "linear-gradient(to top,rgb(58, 58, 58), rgb(30, 30, 30))", height: "100vh", overflowY: 'auto' }}>
-      <Header />
+    <Box>
       <GenerateFlashcardBody />
-      <PermissionDialog access={userAccess}/>
-    </Container>
+      <PermissionDialog access={access}/>
+    </Box>
   );
 }
+
+export default GeneratePage;

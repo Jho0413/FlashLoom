@@ -22,7 +22,7 @@ const SubscriptionPage = () => {
   const { isPending, isError, data: subscriptionData, error } = useQuery({
     queryKey: ["subscriptionData"],
     queryFn: fetchSubscriptionData,
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 60,
   });
 
   if (isPending) {
@@ -35,7 +35,7 @@ const SubscriptionPage = () => {
 
   console.log(subscriptionData);
   const { plan, generations, cancelled, subscriptionEndTime } = subscriptionData;
-  const subscriptionDate = formatUnixToDate(subscriptionEndTime);
+  const subscriptionDate = subscriptionEndTime ? formatUnixToDate(subscriptionEndTime) : "";
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
       <Box sx={{ pb: "1rem" }}>

@@ -14,7 +14,6 @@ const Header = () => {
     <AppBar
       sx={{
         backgroundColor: "rgb(30 30 30)",
-        mb: 10,
       }}
     >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>

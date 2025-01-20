@@ -7,6 +7,8 @@ import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { Container } from "@mui/material";
+import Header from "./components/header";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,18 @@ export default function RootLayout({ children }) {
             <title>FlashLoom</title>
           </Head>
           <body className={inter.className}>
-            {children}
+            <Container
+              maxWidth="100%"
+              disableGutters
+              sx={{
+                overflowY: "auto",
+                backgroundColor: "#121212", 
+                color: "white", 
+              }}
+            >
+              <Header />
+              {children}
+            </Container>
             <Analytics />
           </body>
         </html>

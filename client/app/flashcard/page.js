@@ -18,14 +18,12 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase.js";
 import Header from "../components/header";
 
-export default function Flashcard() {
+export default function Flashcard({ searchParams }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const [flashcards, setFlashcards] = useState([]);
   const [flipped, setFlipped] = useState({});
   const [loading, setLoading] = useState(true);
-
-  const searchParams = useSearchParams();
-  const flashcardSetId = searchParams.get("id");
+  const { id: flashcardSetId } = searchParams;
 
   useEffect(() => {
     async function getFlashcards() {

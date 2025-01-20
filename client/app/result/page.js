@@ -1,18 +1,14 @@
 'use client'
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
-import getStripe from '@/utils/get-stripe'
-import { useSearchParams } from 'next/navigation'
 import { CircularProgress, Typography, Container, Box, Button } from '@mui/material'
-import { useUser } from '@clerk/nextjs'
 
-const ResultPage = () => {
-    const router  = useRouter()
-    const searchParams = useSearchParams()
-    const session_id = searchParams.get('session_id')
-    const [session, setSession] = useState(true)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+const ResultPage = ({ searchParams }) => {
+    const router  = useRouter();
+    const { session_id } = searchParams;
+    const [session, setSession] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchCheckoutSession = async () => {

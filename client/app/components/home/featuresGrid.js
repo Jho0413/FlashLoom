@@ -6,7 +6,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { featureDescriptions } from "../../utils/featureDescriptions";
+import { featureDescriptions } from "../../../utils/featureDescriptions";
 import { motion } from "framer-motion";
 
 const FeatureGridItem = ({ title, description }) => {

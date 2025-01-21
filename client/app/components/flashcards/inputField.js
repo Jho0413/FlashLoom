@@ -1,4 +1,4 @@
-const { TextField } = require("@mui/material")
+import { TextField } from "@mui/material";
 
 const InputField = ({ name, label, rows, value, setValue, required }) => {
     return (

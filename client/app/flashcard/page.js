@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useSearchParams } from "next/navigation";
 import {
   Container,
   Grid,
@@ -16,7 +15,7 @@ import {
 } from "@mui/material";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase.js";
-import Header from "../components/header";
+import Header from "../components/common/header";
 
 export default function Flashcard({ searchParams }) {
   const { isLoaded, isSignedIn, user } = useUser();

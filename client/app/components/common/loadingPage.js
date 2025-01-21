@@ -1,6 +1,6 @@
 import { Box, CircularProgress } from "@mui/material";
 
-const LoadingPage = () => {
+const LoadingPage = ({ colour, size }) => {
   return (
     <Box
       sx={{
@@ -11,7 +11,7 @@ const LoadingPage = () => {
         alignItems: "center",
       }}
     >
-      <CircularProgress />
+      <CircularProgress size={size} color={colour}/>
     </Box>
   )
 }

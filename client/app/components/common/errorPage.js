@@ -1,7 +1,7 @@
 import { Box, Container, Typography, Button } from "@mui/material";
 import { useRouter } from "next/navigation";
 
-const ErrorPage = () => {
+const ErrorPage = ({ titleSize, disableButton }) => {
 
   const router = useRouter();
 
@@ -25,22 +25,26 @@ const ErrorPage = () => {
           backgroundColor: '#f9f9f9',
         }}
       >
-        <Box mb={3}>
-          <Typography variant="h4" color="error" gutterBottom>
+        <Box>
+          <Typography 
+            variant={titleSize ? titleSize : "h4"} 
+            color="error" 
+            gutterBottom
+          >
             Oops! Something Went Wrong
           </Typography>
           <Typography variant="body1" color="textSecondary">
             We encountered an issue and are working to resolve it. Please try again later.
           </Typography>
         </Box>
-        <Button 
+        {!disableButton && <Button 
           variant="contained" 
           color="primary" 
           onClick={() => router.push("/")}
           sx={{ marginTop: 2 }}
         >
           Go to Home Page
-        </Button>
+        </Button>}
       </Container>      
     </Box>
   )

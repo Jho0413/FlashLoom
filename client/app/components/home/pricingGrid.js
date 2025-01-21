@@ -9,7 +9,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { pricingDescriptions } from "../../utils/pricingDescriptions";
+import { pricingDescriptions } from "../../../utils/pricingDescriptions";
 import getStripe from "@/utils/get-stripe";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";

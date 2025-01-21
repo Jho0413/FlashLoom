@@ -8,10 +8,10 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import FeatureGrid from "./components/featuresGrid";
+import FeatureGrid from "./components/home/featuresGrid";
 import { useRouter } from "next/navigation";
-import PricingGrid from "./components/pricingGrid";
-import FaqSection from "./components/faqSection";
+import PricingGrid from "./components/home/featuresGrid";
+import FaqSection from "./components/home/faqSection";
 import { motion } from "framer-motion";
 
 export default function Home() {

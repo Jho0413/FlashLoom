@@ -13,7 +13,7 @@ import {
     TabPanel,
     TabList
 } from "@mui/lab"
-import InputField from "../components/inputField"
+import InputField from "../components/flashcards/inputField"
 import { useEffect, useState } from "react"
 import BuildIcon from '@mui/icons-material/Build';
 import { useUser } from "@clerk/nextjs"

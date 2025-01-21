@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Container } from "@mui/material";
-import Header from "./components/header";
+import Header from "./components/common/header";
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -5,8 +5,8 @@ import GenerateFlashcardBody from "./generateFlashcardBody";
 import PermissionDialog from "./permissionDialog";
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
-import ErrorPage from "../components/errorPage";
-import LoadingPage from "../components/loadingPage";
+import ErrorPage from "../components/common/errorPage";
+import LoadingPage from "../components/common/loadingPage";
 
 const GeneratePage = () => {
   const { user } = useUser();

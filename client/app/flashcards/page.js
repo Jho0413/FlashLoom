@@ -20,7 +20,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { doc, collection, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase.js";
-import Header from "../components/header";
+import Header from "../components/common/header";
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser();

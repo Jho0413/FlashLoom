@@ -1,5 +1,5 @@
 import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { FAQs } from "../../utils/faqs";
+import { FAQs } from "../../../utils/faqs";
 import { motion } from "framer-motion";
 
 const FaqItem = ({ question, answer }) => {

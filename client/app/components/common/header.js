@@ -4,7 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import SubscriptionPage from "./subscriptionPage/subscriptionPage";
+import SubscriptionPage from "../subscriptions/subscriptionPage";
 
 const Header = () => {
 

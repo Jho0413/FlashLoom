@@ -46,10 +46,10 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
           oldFlashcards.unshift({ id: id, name: name });
           return oldFlashcards;
         });
+      setSaved(true);
     },
     onError: () => setError(true),
     onSettled: () => {
-      setSaved(true);
       setDialogOpen(false);
       setName("");
       setLoading(false);

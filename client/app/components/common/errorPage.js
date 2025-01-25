@@ -18,7 +18,6 @@ const ErrorPage = ({ titleSize, disableButton }) => {
         maxWidth="sm" 
         sx={{
           textAlign: 'center',
-          marginTop: 8,
           padding: 4,
           borderRadius: 2,
           boxShadow: 3,

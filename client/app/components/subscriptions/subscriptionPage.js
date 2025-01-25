@@ -44,7 +44,7 @@ const SubscriptionPageBody = () => {
   }
 
   const { isPending, isError, data: subscriptionData, error } = useQuery({
-    queryKey: ["subscriptionData"],
+    queryKey: [user.id, "subscriptionData"],
     queryFn: fetchSubscriptionData,
     staleTime: 1000 * 60 * 60,
   });

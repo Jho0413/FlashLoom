@@ -10,14 +10,13 @@ import {
 } from "@mui/material";
 import FeatureGrid from "./components/home/featuresGrid";
 import { useRouter } from "next/navigation";
-import PricingGrid from "./components/home/featuresGrid";
+import PricingGrid from "./components/home/pricingGrid";
 import FaqSection from "./components/home/faqSection";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
   const { isSignedIn } = useUser(); // Use Clerk's hook to check if the user is signed in
-
   const handleGetStartedClick = () => {
     if (isSignedIn) {
       router.push(`/generate`); // Redirect to Generate page if signed in

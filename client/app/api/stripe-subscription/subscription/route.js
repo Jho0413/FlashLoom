@@ -40,12 +40,14 @@ export async function POST(req) {
                         subscriptionEndTime: current_period_end,
                         subscriptionPlan: plan.id,
                         subscriptionId: id,
+                        cancelled: false,
                     });
                 // subscription failed payment
                 else if (status === "past_due" || status === "unpaid") 
                     await updateDoc(docRef, {
                         subscriptionEndTime: null,
                         subscriptionPlan: "Free",
+                        cancelled: true,
                     });
                 break; 
             // subscription ended
@@ -53,6 +55,7 @@ export async function POST(req) {
                 await updateDoc(docRef, {
                     subscriptionPlan: "Free",
                     subscriptionEndTime: null,
+                    cancelled: true,
                 });
                 break;
         }

@@ -78,7 +78,7 @@ const SubscriptionPageBody = () => {
       <SubscriptionPageDivider />
       <SubscriptionPageSection
         subheader="Cancel Subscription"
-        content1={<CancelSubscriptionAction cancelled={false} />}
+        content1={<CancelSubscriptionAction cancelled={cancelled} />}
         lastRow
         flexContent1={2}
       />

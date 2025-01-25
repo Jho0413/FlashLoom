@@ -67,7 +67,7 @@ const FlashcardsContent = ({ flashcards, setLoading, setError, userId }) => {
   return (
     <Grid container spacing={3} >
       {flashcards.length > 0 && flashcards.map(({ id, name }) => 
-        <FlashcardCard key={id} name={name} setLoading={setLoading} setError={setError} userId={userId}/>
+        <FlashcardCard key={id} id={id} name={name} setLoading={setLoading} setError={setError} userId={userId}/>
       )}
       <AddFlashcardCard />
     </Grid>

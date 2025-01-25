@@ -6,8 +6,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Fade, Grid, Card, IconButton, CardActionArea, CardContent, Typography, Modal, Box, Button } from "@mui/material";
 import { useRouter } from "next/navigation";
 
-const FlashcardCard = ({ key, name, setLoading, setError, userId }) => {
-
+const FlashcardCard = ({ id, name, setLoading, setError, userId }) => {
   const [confirmation, setConfirmation] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -20,21 +19,21 @@ const FlashcardCard = ({ key, name, setLoading, setError, userId }) => {
       method: "POST",
       body: JSON.stringify({
         userId: userId,
-        flashcardId: key,
+        flashcardId: id,
       })
     });
     
     if (!response.ok) 
       throw new Error("Unable to delete flashcard set");
-    return key;
+    return id;
   }
   
   const mutation = useMutation({
     mutationFn: deleteFlashcardSet,
     mutationKey: [userId, "flashcards"],
-    onSuccess: (key) => {
+    onSuccess: (id) => {
       queryClient.setQueryData([userId, "flashcards"], (oldFlashcards) => {
-        return oldFlashcards?.filter((flashcard) => flashcard.id !== key)
+        return oldFlashcards?.filter((flashcard) => flashcard.id !== id)
       });
     },
     onError: () => setError(true),
@@ -56,7 +55,7 @@ const FlashcardCard = ({ key, name, setLoading, setError, userId }) => {
           >
             <DeleteIcon />
           </IconButton>
-          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push(`/flashcard?id=${key}`)}>
+          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push(`/flashcard?id=${id}`)}>
             <CardContent
               sx={{
                 display: "flex",

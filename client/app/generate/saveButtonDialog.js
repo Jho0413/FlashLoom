@@ -9,68 +9,74 @@ import {
     DialogActions,
     TextField,
 } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { db } from "@/firebase";
-import { doc, writeBatch, collection, getDoc } from "firebase/firestore";
 
-const SaveButtonDialog = ({ flashcards }) => {
+const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
   const { user } = useUser();
-  const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [setName, setSetName] = useState("");
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const queryClient = useQueryClient();
 
-  const saveFlashcards = async () => {
-    if (!setName.trim()) {
-      alert("Please enter a name for your flashcard set.");
+  const saveFlashcardSet = async () => {
+    const response = await fetch("/api/flashcards/save", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: user.id,
+        name: name,
+        flashcards: flashcards, 
+      })
+    });
+    
+    if (!response.ok) 
+      throw new Error("Unable to save flashcards");
+
+    const data = await response.json();
+    return data.id;
+  }
+  
+  const mutation = useMutation({
+    mutationFn: saveFlashcardSet,
+    mutationKey: [user.id, "flashcards"],
+    onSuccess: (id) => {
+      if (queryClient.getQueryData([user.id, "flashcards"]))
+        queryClient.setQueryData([user.id, "flashcards"], (oldFlashcards) => {
+          oldFlashcards.unshift({ id: id, name: name });
+          return oldFlashcards;
+        });
+    },
+    onError: () => setError(true),
+    onSettled: () => {
+      setSaved(true);
+      setDialogOpen(false);
+      setName("");
+      setLoading(false);
+    }
+  });
+
+  const saveFlashcards = () => {
+    if (!name.trim()) {
+      setNameError(true);
       return;
     }
 
-    if (!user) {
-      alert("User not found. Please log in.");
-      return;
-    }
-
-    try {
-      const userDocRef = doc(collection(db, "users"), user.id);
-      const userDocSnap = await getDoc(userDocRef);
-
-      const batch = writeBatch(db);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const updatedSets = [
-          ...(userData.flashcardSets || []),
-          { name: setName },
-        ];
-        batch.update(userDocRef, { flashcardSets: updatedSets });
-      } else {
-        batch.set(userDocRef, { flashcardSets: [{ name: setName }] });
-      }
-
-      const setDocRef = doc(collection(userDocRef, "flashcardSets"), setName);
-      batch.set(setDocRef, { flashcards });
-
-      await batch.commit();
-
-      alert("Flashcards saved successfully!");
-      handleCloseDialog();
-      router.push(`/flashcards`);
-      setSetName("");
-    } catch (error) {
-      console.error("Error saving flashcards:", error);
-      alert("An error occurred while saving flashcards. Please try again.");
-    }
+    setLoading(true);
+    setNameError(false);
+    mutation.mutate();
   };
 
   if (flashcards.length == 0)
     return <div></div>;
+
   return (
     <Box sx={{ display: "flex", justifyContent: "center" }}>
       <Button
         variant="contained"
         color="primary"
         onClick={() => setDialogOpen(true)}
+        disabled={saved}
       >
         Save Flashcards
       </Button>
@@ -78,7 +84,12 @@ const SaveButtonDialog = ({ flashcards }) => {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Save Flashcard Set</DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText 
+            sx={{ 
+              color: nameError ? "red" : "", 
+              fontWeight: nameError ? "bold" : "" 
+            }}
+          >
             Please enter a name for your flashcard set.
           </DialogContentText>
           <TextField
@@ -86,9 +97,10 @@ const SaveButtonDialog = ({ flashcards }) => {
             margin="dense"
             label="Set Name"
             type="text"
+            color={nameError ? "error" : "primary"}
             fullWidth
-            value={setName}
-            onChange={(e) => setSetName(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </DialogContent>
         <DialogActions>

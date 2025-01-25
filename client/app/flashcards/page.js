@@ -13,12 +13,11 @@ import AddFlashcardCard from "./addFlashcardCard";
 
 const Flashcards = () => {
   const { isLoaded, user } = useUser();
-
-  if (!isLoaded) 
-    return <LoadingPage />
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const fetchFlashcards = async () => {
-    const response = await fetch(`/api/flashcards?userId=${user.id}`);
+    const response = await fetch(`/api/flashcards?userId=${user?.id}`);
     if (!response.ok) 
       throw new Error("Unable to fetch flashcards");
     const data = await response.json();
@@ -26,15 +25,13 @@ const Flashcards = () => {
   }
 
   const { isPending, isError, data: flashcards } = useQuery({
-    queryKey: [user.id, "flashcards"],
+    queryKey: [user?.id, "flashcards"],
     queryFn: fetchFlashcards,
+    enabled: !!user?.id,
     staleTime: 60 * 5 * 1000, 
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  if (isPending) {
+  if (!isLoaded || isPending) {
     return <LoadingPage />
   }
 
@@ -70,7 +67,7 @@ const FlashcardsContent = ({ flashcards, setLoading, setError, userId }) => {
   return (
     <Grid container spacing={3} >
       {flashcards.length > 0 && flashcards.map(({ id, name }) => 
-        <FlashcardCard id={id} name={name} setLoading={setLoading} setError={setError} userId={userId}/>
+        <FlashcardCard key={id} name={name} setLoading={setLoading} setError={setError} userId={userId}/>
       )}
       <AddFlashcardCard />
     </Grid>

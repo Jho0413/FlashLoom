@@ -21,7 +21,10 @@ import { useUser } from "@clerk/nextjs";
 import LoadingModal from "../components/common/loadingModal";
 import ErrorModal from "../components/common/errorModal";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query"
 import PermissionDialog from "./permissionDialog"
+import LoadingPage from "../components/common/loadingPage"
+import ErrorPage from "../components/common/errorPage"
 
 const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   const { user } = useUser();
@@ -32,6 +35,36 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   const [inputError, setInputError] = useState("");
   const [access, setAccess] = useState(true);
   const queryClient = useQueryClient();
+
+  const fetchSubscriptionData = async () => {
+    const response = await fetch(`/api/stripe-subscription/subscription?userId=${user.id}`, {
+      cache: "default",
+    });
+
+    if (!response.ok) {
+        throw new Error("Unable to find subscription information");
+    }
+    const data = await response.json();
+    return data;
+  }
+
+  const { isPending, isError, data: subscriptionData, error: queryError } = useQuery({
+    queryKey: [user.id, "subscriptionData"],
+    queryFn: fetchSubscriptionData,
+    staleTime: 1000 * 60,
+  });
+
+  if (isPending) {
+    return <LoadingPage />
+  }
+
+  if (isError) {
+    return <ErrorPage />
+  }
+
+  if (!subscriptionData.access) {
+    return <PermissionDialog access={subscriptionData.access}/>
+  }
 
   const handleTabChange = (event, newTab) => {
     event.preventDefault();
@@ -67,6 +100,13 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   }
 
   const handleSubmit = async () => {
+    // access checking
+    const { plan, generations, subscriptionEndTime } = subscriptionData;
+    if ((plan !== "Free" || generations >= 3) && (plan === "Free" || Date.now() > subscriptionEndTime)) {
+      setAccess(false);
+      return;
+    }
+
     // form validation 
     switch (tabName) {
       case "Basic":
@@ -223,6 +263,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
       </Container>
       <LoadingModal loading={loading} />
       <ErrorModal error={error} setError={setError} />
+      <PermissionDialog access={access} />
     </Box>
   )
 }

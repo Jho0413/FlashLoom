@@ -1,50 +1,41 @@
 "use client"
 
-import { Box } from "@mui/material";
-import GenerateFlashcardBody from "./generateFlashcardBody";
-import PermissionDialog from "./permissionDialog";
-import { useQuery } from "@tanstack/react-query";
-import { useUser } from "@clerk/nextjs";
-import ErrorPage from "../components/common/errorPage";
-import LoadingPage from "../components/common/loadingPage";
+import { Container, Typography, Divider, Box } from "@mui/material";
+import React, { useState } from "react";
+import FlashcardForm from "./flashcardForm";
+import FlashCardList from "./flashcardList";
+import SaveButtonDialog from "./saveButtonDialog";
+import ErrorModal from "../components/common/errorModal";
+import LoadingModal from "../components/common/loadingModal";
 
-const GeneratePage = () => {
-  const { user } = useUser();
+const GenerateFlashcardBody = () => {
 
-  const fetchSubscriptionData = async () => {
-    const response = await fetch(`/api/stripe-subscription/subscription?userId=${user.id}`, {
-      cache: "default",
-    });
-
-    if (!response.ok) {
-        throw new Error("Unable to find subscription information");
-    }
-    const data = await response.json();
-    return data;
-  }
-
-  const { isPending, isError, data: subscriptionData, error } = useQuery({
-    queryKey: ["subscriptionData"],
-    queryFn: fetchSubscriptionData,
-    staleTime: 1000 * 60 * 60,
-  });
-
-  if (isPending) {
-    return <LoadingPage />;
-  }
-
-  if (isError) {
-    return <ErrorPage />;
-  }
-
-  const { access, plan, generations } = subscriptionData;
+  const [flashcards, setFlashcards] = useState([]);
+  const [flippedStates, setFlippedStates] = useState({});
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
-    <Box>
-      <GenerateFlashcardBody />
-      <PermissionDialog access={access}/>
-    </Box>
+    <Container maxWidth="md" sx={{ p: 5, mt: 10, gap: 5, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          fontWeight="bold"
+          color="white"
+        >
+          Generate Flashcards
+        </Typography>
+        <Divider sx={{ backgroundColor: "white" }}/>
+      </Box>
+      <FlashcardForm setFlashcards={setFlashcards} setFlippedStates={setFlippedStates}/>
+      <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
+      <SaveButtonDialog flashcards={flashcards} setError={setError} setLoading={setLoading}/>
+      <ErrorModal error={error} setError={setError} />
+      <LoadingModal loading={loading} />
+    </Container> 
   );
 }
 
-export default GeneratePage;
+export default GenerateFlashcardBody;

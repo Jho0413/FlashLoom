@@ -1,5 +1,5 @@
 import MainLayout from "../components/common/mainLayout";
 
 export default function FlashcardsLayout({ children }) {
-  return <MainLayout children={children} title="Your Flashcards"/>
+  return <MainLayout title="Your Flashcards">{children}</MainLayout>
 }

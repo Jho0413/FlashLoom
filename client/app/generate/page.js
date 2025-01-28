@@ -62,7 +62,7 @@ const GenerateFlashcardBody = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 5 }}>
       <FlashcardForm setFlashcards={setFlashcards} setFlippedStates={setFlippedStates} />
       <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
       <SaveButtonDialog flashcards={flashcards} setError={setError} setLoading={setLoading} />

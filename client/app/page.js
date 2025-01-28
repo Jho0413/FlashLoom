@@ -1,6 +1,7 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 import {
   Button,
   Container,
@@ -13,10 +14,24 @@ import { useRouter } from "next/navigation";
 import PricingGrid from "./components/home/pricingGrid";
 import FaqSection from "./components/home/faqSection";
 import { motion } from "framer-motion";
+import SessionModal from "./components/common/sesesionModal";
 
 export default function Home() {
   const router = useRouter();
-  const { isSignedIn } = useUser(); // Use Clerk's hook to check if the user is signed in
+  const { isSignedIn, session } = useSession();
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      setLoggedIn(true);
+    }
+
+    if (loggedIn && !session) {
+      setSessionExpired(true);
+    }
+  }, [isSignedIn, session, loggedIn]);
+
   const handleGetStartedClick = () => {
     if (isSignedIn) {
       router.push(`/generate`); // Redirect to Generate page if signed in
@@ -76,6 +91,7 @@ export default function Home() {
         <Divider sx={{ borderColor: "white" }} />
         <FaqSection />
       </Box>
+      <SessionModal sessionExpired={sessionExpired}/>
     </Container>
   );
 }

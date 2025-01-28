@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import { Box, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import LoadingPage from "../components/common/loadingPage";
@@ -10,14 +10,15 @@ import ErrorModal from "../components/common/errorModal";
 import LoadingModal from "../components/common/loadingModal";
 import FlashcardCard from "./flashcardCard";
 import AddFlashcardCard from "./addFlashcardCard";
+import SessionModal from "../components/common/sesesionModal";
 
 const Flashcards = () => {
-  const { isLoaded, user } = useUser();
+  const { isLoaded, session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const fetchFlashcards = async () => {
-    const response = await fetch(`/api/flashcards?userId=${user?.id}`);
+    const response = await fetch(`/api/flashcards?userId=${session?.user?.id}`);
     if (!response.ok) 
       throw new Error("Unable to fetch flashcards");
     const data = await response.json();
@@ -25,13 +26,21 @@ const Flashcards = () => {
   }
 
   const { isPending, isError, data: flashcards } = useQuery({
-    queryKey: [user?.id, "flashcards"],
+    queryKey: [session?.user?.id, "flashcards"],
     queryFn: fetchFlashcards,
-    enabled: !!user?.id,
+    enabled: !!session,
     staleTime: 60 * 5 * 1000, 
   });
 
-  if (!isLoaded || isPending) {
+  if (!isLoaded) {
+    return <LoadingPage />
+  }
+
+  if (!session) {
+    return <SessionModal sessionExpired={!session} />
+  }
+
+  if (isPending) {
     return <LoadingPage />
   }
 

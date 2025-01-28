@@ -1,10 +1,11 @@
 import formatUnixToDate from "@/utils/convertUNIXToDate";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import { Box, Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import CancelSubscriptionAction from "./cancelSubscriptionAction";
 import LoadingPage from "../common/loadingPage";
 import ErrorPage from "../common/errorPage";
+import SessionModal from "../common/sesesionModal";
 
 const SubscriptionPage = () =>{
   return (
@@ -29,10 +30,10 @@ const SubscriptionPage = () =>{
 }
 
 const SubscriptionPageBody = () => {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, session } = useSession();
   
   const fetchSubscriptionData = async () => {
-    const response = await fetch(`/api/stripe-subscription/subscription?userId=${user.id}`, {
+    const response = await fetch(`/api/stripe-subscription/subscription?userId=${session?.user.id}`, {
       cache: "default",
     });
 
@@ -44,13 +45,25 @@ const SubscriptionPageBody = () => {
   }
 
   const { isPending, isError, data: subscriptionData } = useQuery({
-    queryKey: [user?.id, "subscriptionData"],
+    queryKey: [session?.user?.id, "subscriptionData"],
     queryFn: fetchSubscriptionData,
-    enabled: !!user?.id,
+    enabled: !!session,
     staleTime: 1000 * 60 * 60,
   });
 
-  if (isPending || !isLoaded) {
+  if (!isLoaded) {
+    return (
+      <Box sx={{ mt: "2rem" }}>
+        <LoadingPage colour="inherit" size="2rem"/>
+      </Box>
+    )
+  }
+
+  if (!session) {
+    return <SessionModal sessionExpired={!session}/>
+  }
+
+  if (isPending) {
     return (
       <Box sx={{ mt: "2rem" }}>
         <LoadingPage colour="inherit" size="2rem"/>

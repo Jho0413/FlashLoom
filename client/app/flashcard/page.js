@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
 import FlashCardList from "../generate/flashcardList";
 import PageBodyLayout from "../components/common/pageBodyLayout";
+import SessionModal from "../components/common/sesesionModal";
 
 export default function Flashcard({ searchParams }) {
-  const { isLoaded, user } = useUser();
+  const { isLoaded, session } = useSession();
   const { id: flashcardSetId, name } = searchParams;
   const [flippedStates, setFlippedStates] = useState({});
 
   const fetchFlashcardSet = async () => {
-    const response = await fetch(`/api/flashcards/${flashcardSetId}?userId=${user?.id}`);
+    const response = await fetch(`/api/flashcards/${flashcardSetId}?userId=${session?.user?.id}`);
     if (!response.ok)
       throw new Error("Unable to fetch flashcardSet");
     const data = await response.json();
@@ -23,12 +24,18 @@ export default function Flashcard({ searchParams }) {
 
   const { isPending, isError, data } = useQuery({
     queryFn: fetchFlashcardSet,
-    queryKey: [user?.id, "flashcards", flashcardSetId],
+    queryKey: [session?.user?.id, "flashcards", flashcardSetId],
     staleTime: Infinity,
-    enabled: !!user?.id,
+    enabled: !!session,
   });
 
-  if (!isLoaded || isPending) 
+  if (!isLoaded) 
+    return <LoadingPage />
+
+  if (!session) 
+    return <SessionModal sessionExpired={!session}/>
+  
+  if (isPending) 
     return <LoadingPage />
 
   if (isError)

@@ -22,7 +22,7 @@ const PricingGridItem = ({ title, price, description, disabled }) => {
     if (disabled) return;
 
     if (!isSignedIn) {
-      router.push("/sign-in");
+      router.push("/sign-up");
       return;
     }
 
@@ -56,7 +56,7 @@ const PricingGridItem = ({ title, price, description, disabled }) => {
       sx={{ 
         display: "flex", 
         justifyContent: "center", 
-        color: "white" 
+        color: "white",
       }}
     >
       <motion.div

@@ -1,15 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import MainLayout from "../components/common/mainLayout";
-import { Suspense } from "react";
+import { Container } from "@mui/material";
 
 export default function FlashcardLayout({ children }) {
-  const searchParams = useSearchParams();
-  const name = searchParams.get("name");
   return (
-    <Suspense>
-      <MainLayout title={name}>{children}</MainLayout>
-    </Suspense>
-  )
+    <Container maxWidth="100%" sx={{ backgroundImage: "linear-gradient(to top,rgb(58, 58, 58), rgb(30, 30, 30))", height: "100vh", overflowY: 'auto' }}>
+      {children}
+    </Container>
+  );
 }

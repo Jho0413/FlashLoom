@@ -6,10 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
 import FlashCardList from "../generate/flashcardList";
+import PageBodyLayout from "../components/common/pageBodyLayout";
 
 export default function Flashcard({ searchParams }) {
   const { isLoaded, user } = useUser();
-  const { id: flashcardSetId } = searchParams;
+  const { id: flashcardSetId, name } = searchParams;
   const [flippedStates, setFlippedStates] = useState({});
 
   const fetchFlashcardSet = async () => {
@@ -36,6 +37,8 @@ export default function Flashcard({ searchParams }) {
   const { flashcards } = data;
 
   return (
-    <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
+    <PageBodyLayout title={name}>
+      <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
+    </PageBodyLayout>
   )
 }

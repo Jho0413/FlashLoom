@@ -1,9 +1,10 @@
-import { Container } from "@mui/material";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import MainLayout from "../components/common/mainLayout";
 
 export default function FlashcardLayout({ children }) {
-  return (
-    <Container maxWidth="100%" sx={{ backgroundImage: "linear-gradient(to top,rgb(58, 58, 58), rgb(30, 30, 30))", height: "100vh", overflowY: 'auto' }}>
-      {children}
-    </Container>
-  );
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name");
+  return <MainLayout children={children} title={name}/>
 }

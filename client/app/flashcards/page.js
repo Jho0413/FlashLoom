@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Container, Box, Grid, Typography, Divider } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
@@ -40,34 +40,19 @@ const Flashcards = () => {
   }
 
   return (
-    <Container 
-      maxWidth="md" 
-      sx={{ 
-        p: 5, 
-        mt: 10, 
-        display: "flex", 
-        flexDirection: "column", 
-        gap: 5 
-      }}
-    >
-      <Box>
-        <Typography variant="h4" fontWeight="bold" color="white" gutterBottom>
-          Your Flashcards
-        </Typography>
-        <Divider sx={{ backgroundColor: "white" }}/>
-      </Box>
-      <FlashcardsContent flashcards={flashcards} setLoading={setLoading} setError={setError} userId={user.id}/>
+    <Box>
+      <FlashcardsContent flashcards={flashcards} setLoading={setLoading} setError={setError}/>
       <LoadingModal loading={loading} />
       <ErrorModal error={error} setError={setError} />
-    </Container>  
+    </Box>
   )
 }
 
-const FlashcardsContent = ({ flashcards, setLoading, setError, userId }) => {
+const FlashcardsContent = ({ flashcards, setLoading, setError }) => {
   return (
     <Grid container spacing={3} >
       {flashcards.length > 0 && flashcards.map(({ id, name }) => 
-        <FlashcardCard key={id} id={id} name={name} setLoading={setLoading} setError={setError} userId={userId}/>
+        <FlashcardCard key={id} id={id} name={name} setLoading={setLoading} setError={setError}/>
       )}
       <AddFlashcardCard />
     </Grid>

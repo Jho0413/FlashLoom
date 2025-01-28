@@ -5,8 +5,10 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Fade, Grid, Card, IconButton, CardActionArea, CardContent, Typography, Modal, Box, Button } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
-const FlashcardCard = ({ id, name, setLoading, setError, userId }) => {
+const FlashcardCard = ({ id, name, setLoading, setError }) => {
+  const { user } = useUser();
   const [confirmation, setConfirmation] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -18,7 +20,7 @@ const FlashcardCard = ({ id, name, setLoading, setError, userId }) => {
     const response = await fetch("/api/flashcards/delete", {
       method: "POST",
       body: JSON.stringify({
-        userId: userId,
+        userId: user.id,
         flashcardId: id,
       })
     });
@@ -30,9 +32,9 @@ const FlashcardCard = ({ id, name, setLoading, setError, userId }) => {
   
   const mutation = useMutation({
     mutationFn: deleteFlashcardSet,
-    mutationKey: [userId, "flashcards"],
+    mutationKey: [user.id, "flashcards"],
     onSuccess: (id) => {
-      queryClient.setQueryData([userId, "flashcards"], (oldFlashcards) => {
+      queryClient.setQueryData([user.id, "flashcards"], (oldFlashcards) => {
         return oldFlashcards?.filter((flashcard) => flashcard.id !== id)
       });
     },
@@ -55,7 +57,7 @@ const FlashcardCard = ({ id, name, setLoading, setError, userId }) => {
           >
             <DeleteIcon />
           </IconButton>
-          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push(`/flashcard?id=${id}`)}>
+          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push(`/flashcard?id=${id}&name=${name}`)}>
             <CardContent
               sx={{
                 display: "flex",

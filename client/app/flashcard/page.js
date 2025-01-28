@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Container, Typography, Box, Divider } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
@@ -34,23 +33,9 @@ export default function Flashcard({ searchParams }) {
   if (isError)
     return <ErrorPage />
 
-  const { name, flashcards } = data;
+  const { flashcards } = data;
 
   return (
-    <Container maxWidth="md" sx={{ p: 5, mt: 10, gap: 5, display: "flex", flexDirection: "column" }}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          gutterBottom
-          fontWeight="bold"
-          color="white"
-        >
-          {name}
-        </Typography>
-        <Divider sx={{ backgroundColor: "white" }}/>
-      </Box>
-      <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
-    </Container> 
+    <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
   )
 }

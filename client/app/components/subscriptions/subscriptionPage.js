@@ -29,7 +29,7 @@ const SubscriptionPage = () =>{
 }
 
 const SubscriptionPageBody = () => {
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   
   const fetchSubscriptionData = async () => {
     const response = await fetch(`/api/stripe-subscription/subscription?userId=${user.id}`, {
@@ -43,13 +43,14 @@ const SubscriptionPageBody = () => {
     return data;
   }
 
-  const { isPending, isError, data: subscriptionData, error } = useQuery({
-    queryKey: [user.id, "subscriptionData"],
+  const { isPending, isError, data: subscriptionData } = useQuery({
+    queryKey: [user?.id, "subscriptionData"],
     queryFn: fetchSubscriptionData,
+    enabled: !!user?.id,
     staleTime: 1000 * 60 * 60,
   });
 
-  if (isPending) {
+  if (isPending || !isLoaded) {
     return (
       <Box sx={{ mt: "2rem" }}>
         <LoadingPage colour="inherit" size="2rem"/>
@@ -78,7 +79,7 @@ const SubscriptionPageBody = () => {
       <SubscriptionPageDivider />
       <SubscriptionPageSection
         subheader="Cancel Subscription"
-        content1={<CancelSubscriptionAction cancelled={cancelled} />}
+        content1={<CancelSubscriptionAction cancelled={cancelled}/>}
         lastRow
         flexContent1={2}
       />

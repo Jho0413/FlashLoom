@@ -33,7 +33,6 @@ const CancelSubscriptionAction = ({ cancelled }) => {
         throw new Error("Failed to cancel subscription");
       setSuccess(true);
     } catch (error) {
-      console.log(error);
       setError(true);
     } finally {
       setLoading(false);

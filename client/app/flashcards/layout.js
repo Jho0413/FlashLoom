@@ -1,9 +1,5 @@
-import { Container } from "@mui/material";
+import MainLayout from "../components/common/mainLayout";
 
 export default function FlashcardsLayout({ children }) {
-  return (
-    <Container maxWidth="100%" sx={{ backgroundImage: "linear-gradient(to top,rgb(58, 58, 58), rgb(30, 30, 30))", height: "100vh", overflowY: 'auto' }}>
-      {children}
-    </Container>
-  );
+  return <MainLayout children={children} title="Your Flashcards"/>
 }

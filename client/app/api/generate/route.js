@@ -1,52 +1,33 @@
+import { db } from "@/firebase";
+import { doc, increment, updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
-function isValidYoutubeUrl(youtube_url) {
-  const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|.+\?v=)?([A-Za-z0-9_-]{11})$/;
-  return regex.test(youtube_url);
-}
-
 export async function POST(req) {
-
   try {
-    const data = await req.json();
-    const { method } = data;
-
-    // basic method -> must have a message
-    if (method === "Basic") {
-      let message = data?.message;
-      if (!message || !message.trim()) {
-        return NextResponse.json(
-          { error_message: "Message is required" },
-          { status: 400 }
-        );
-      }
+    const formData = await req.formData();
+    const method = formData.get("method");
+    const message = formData.get("message");
+    const userId = formData.get("userId");
+    const plan = formData.get("plan");
+    let body = { method: method, message: message, userId: userId };
+    switch (method) {
+      case "Youtube":
+        body["youtube_url"] = formData.get("youtube_url");
+        break;
+      case "PDF":
+        const file = formData.get("file");
+        const arrayBuffer = await file.arrayBuffer();
+        const base64File = bufferToBase64(arrayBuffer)
+        body["file"] = base64File;
+        body["fileName"] = file.name;
+        break;
+      default:
+        break;
     }
 
-    // youtube method -> must be a valid youtube url
-    if (method === "Youtube") {
-      console.log("reached youtube")
-      let youtube_url = data?.youtube_url;
-      if (!youtube_url) {
-        return NextResponse.json(
-          { error_message: "Missing youtube url" },
-          { status: 400 }
-        );
-      }
-      console.log(isValidYoutubeUrl(youtube_url))
-      if (!isValidYoutubeUrl(youtube_url)) {
-        console.log("reached")
-        return NextResponse.json(
-          { error_message: "Invalid youtube url" },
-          { status: 400 }
-        )
-      }
-    }
-
-    // pdf method
-
-    const response = await fetch("http://127.0.0.1:8000/api/generate", {
+    const response = await fetch("http://127.0.0.1:5000/api/generate", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
       },
@@ -56,12 +37,27 @@ export async function POST(req) {
       throw new Error("An internal error occurred");
     }
 
-    const response_data = await response.json();
-    const flashcards = JSON.parse(response_data);
-
-    return NextResponse.json(flashcards, { status: 200 });
+    const data = await response.json();
+    const { flashcards } = data;
+    if (plan === "Free") {
+      const docRef = doc(db, "users", userId);
+      await updateDoc(docRef, {
+        generations: increment(1)
+      });
+    }
+    return NextResponse.json({ flashcards: flashcards }, { status: 200 });
 
   } catch (error) {
     return NextResponse.json({ error_message: error }, { status: 500 });
   }
+}
+
+function bufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }

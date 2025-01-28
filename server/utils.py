@@ -1,6 +1,7 @@
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 
@@ -20,33 +21,32 @@ def system_prompt(user_message, additional_content):
 
     If the topic is broad, try to cover a range of key concepts. If the topic is specific, focus on detailed aspects.
 
-    Return the flashcards in the following JSON format:
-    {{
-        "flashcards": [
-            {{
-                "front": "Question for the first flashcard",
-                "back": "Answer for the first flashcard"
-            }},
-            {{
-                "front": "Question for the second flashcard",
-                "back": "Answer for the second flashcard"
-            }},
-            ...
-        ]
-    }}
+    Return the flashcards in the following list format:
+    [
+        {{
+            "front": "Question for the first flashcard",
+            "back": "Answer for the first flashcard"
+        }},
+        {{
+            "front": "Question for the second flashcard",
+            "back": "Answer for the second flashcard"
+        }},
+        ...
+    ]
+
 
     Ensure that:
     - The questions encourage recall or critical thinking.
     - The answers provide a solid explanation or definition, concise and short.
     - There are 10-15 flashcards.
-    - There are no trailing ``` or json in the response
+    - There is nothing before and after the square brackets
 
-    Respond with only the JSON in plain text. 
+    Respond with the list in plain text. 
     """
 
     if additional_content:
-        prompt += "\n" + (f'This is some additional content from the user that you should prioritize: '
-                          f'{additional_content}. If this is blank, refer to the user message.')
+        prompt += "\n" + (f'This is some additional content from the user that you should prioritize over the user '
+                          f'message: {additional_content}. If this is blank, refer to the user message.')
 
     return prompt
 
@@ -69,4 +69,4 @@ def generate_topic(content):
 
 def generate_flashcards(prompt):
     response = model.generate_content(prompt)
-    return response.text
+    return re.search(r'\[.*]', response.text, re.DOTALL).group()

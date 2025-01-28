@@ -1,22 +1,9 @@
 'use client'
 
-import { 
-    Box,
-    Tab,
-    Button,
-    Modal,
-    Typography,
-    CircularProgress,
-    Container,
-} from "@mui/material"
-import {
-    TabContext,
-    TabPanel,
-    TabList
-} from "@mui/lab"
+import { Box, Tab, Button, Typography, Container } from "@mui/material"
+import { TabContext, TabPanel, TabList } from "@mui/lab"
 import InputField from "../components/flashcards/inputField"
-import { useEffect, useState } from "react"
-import BuildIcon from '@mui/icons-material/Build';
+import { useState } from "react"
 import { useUser } from "@clerk/nextjs";
 import LoadingModal from "../components/common/loadingModal";
 import ErrorModal from "../components/common/errorModal";
@@ -106,6 +93,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
       setAccess(false);
       return;
     }
+    const newFormData = new FormData();
 
     // form validation 
     switch (tabName) {
@@ -120,18 +108,19 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
           setInputError("Please fill out all required fields");
           return;
         }
-        const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|.+\?v=)?([A-Za-z0-9_-]{11})$/;
+        const regex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(?:watch\?v=|v\/|embed\/|.+\?v=))([A-Za-z0-9_-]{11})(?:&t=\d+s)?$/;
         if (!regex.test(formData.youtube_url)) {
           setInputError("Please input a valid Youtube URL");
           return;
         }
+        newFormData.append("youtube_url", formData.youtube_url);
         break;
       case "PDF":
         if (!formData.file || formData.file.type !== "application/pdf") {
-          console.log("reached");
           setInputError("Please upload a valid PDF file");
           return;
         }
+        newFormData.append("file", formData.file);
         break;
       default: 
         break;
@@ -139,10 +128,14 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
 
     // generating flashcards 
     setLoading(true);
+    newFormData.append("message", formData.message);
+    newFormData.append("method", tabName);
+    newFormData.append("userId", user.id);
+    newFormData.append("plan", plan);
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
-        body: JSON.stringify({ ...formData, method: tabName })
+        body: newFormData,
       });
 
       if (!response.ok) 
@@ -150,7 +143,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
 
       const data = await response.json();
       const { flashcards } = data;
-      setFlashcards(flashcards);
+      setFlashcards(JSON.parse(flashcards));
       setFlippedStates({}); 
 
       // only updating generations if free plan

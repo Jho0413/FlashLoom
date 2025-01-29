@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
+import SuccessModal from "./successModal";
 
 const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
   const { user } = useUser();
@@ -18,6 +19,7 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [success, setSuccess] = useState(false);
   const queryClient = useQueryClient();
 
   const saveFlashcardSet = async () => {
@@ -47,6 +49,7 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
           return oldFlashcards;
         });
       setSaved(true);
+      setSuccess(true);
     },
     onError: () => setError(true),
     onSettled: () => {
@@ -87,7 +90,7 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
           <DialogContentText 
             sx={{ 
               color: nameError ? "red" : "", 
-              fontWeight: nameError ? "bold" : "" 
+              fontWeight: nameError ? "700" : "700" 
             }}
           >
             Please enter a name for your flashcard set.
@@ -110,6 +113,7 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
           </Button>
         </DialogActions>
       </Dialog>
+      <SuccessModal success={success} setSuccess={setSuccess}/>
     </Box>
   );
 }

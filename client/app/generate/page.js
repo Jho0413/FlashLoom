@@ -12,7 +12,7 @@ import LoadingPage from "../components/common/loadingPage";
 import { useQuery } from "@tanstack/react-query";
 import ErrorPage from "../components/common/errorPage";
 import PermissionDialog from "./permissionDialog";
-import SessionModal from "../components/common/sesesionModal";
+import SessionModal from "../components/common/sessionModal";
 
 const GenerateFlashcardBody = () => {
 

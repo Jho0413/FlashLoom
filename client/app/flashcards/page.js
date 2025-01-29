@@ -10,7 +10,7 @@ import ErrorModal from "../components/common/errorModal";
 import LoadingModal from "../components/common/loadingModal";
 import FlashcardCard from "./flashcardCard";
 import AddFlashcardCard from "./addFlashcardCard";
-import SessionModal from "../components/common/sesesionModal";
+import SessionModal from "../components/common/sessionModal";
 
 const Flashcards = () => {
   const { isLoaded, session } = useSession();

@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import PricingGrid from "./components/home/pricingGrid";
 import FaqSection from "./components/home/faqSection";
 import { motion } from "framer-motion";
-import SessionModal from "./components/common/sesesionModal";
+import SessionModal from "./components/common/sessionModal";
 
 export default function Home() {
   const router = useRouter();

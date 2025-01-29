@@ -7,7 +7,7 @@ import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
 import FlashCardList from "../generate/flashcardList";
 import PageBodyLayout from "../components/common/pageBodyLayout";
-import SessionModal from "../components/common/sesesionModal";
+import SessionModal from "../components/common/sessionModal";
 
 export default function Flashcard({ searchParams }) {
   const { isLoaded, session } = useSession();

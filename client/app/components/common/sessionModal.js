@@ -15,7 +15,7 @@ const SessionModal = ({ sessionExpired }) => {
       }}
     >
       <Container 
-        maxWidth="sm" 
+        maxWidth="xs" 
         sx={{
           textAlign: 'center',
           padding: 4,

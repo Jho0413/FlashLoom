@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import CancelSubscriptionAction from "./cancelSubscriptionAction";
 import LoadingPage from "../common/loadingPage";
 import ErrorPage from "../common/errorPage";
-import SessionModal from "../common/sesesionModal";
+import SessionModal from "../common/sessionModal";
 
 const SubscriptionPage = () =>{
   return (

@@ -1,5 +1,3 @@
-import os
-
 from langchain_community.document_loaders import YoutubeLoader
 from pinecone_helpers import upload_data_and_generate
 

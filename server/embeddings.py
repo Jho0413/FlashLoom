@@ -1,3 +1,7 @@
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+import os
 
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+embeddings = HuggingFaceInferenceAPIEmbeddings(
+    model_name="sentence-transformers/all-mpnet-base-v2",
+    api_key=os.environ["HUGGING_FACE_API_KEY"]
+)

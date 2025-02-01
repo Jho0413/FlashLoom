@@ -10,5 +10,4 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 def split_documents(document):
     documents = text_splitter.split_documents(document)
-    print(documents)
     return documents

@@ -2,8 +2,9 @@ import os
 from pinecone import Pinecone
 from embeddings import embeddings
 from utils import system_prompt, generate_flashcards, generate_topic
-from langchain_pinecone import PineconeVectorStore
 from text_splitter import split_documents
+
+pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
 
 
 def upload_data_and_generate(namespace, document, message):
@@ -11,13 +12,16 @@ def upload_data_and_generate(namespace, document, message):
     documents = split_documents(document)
 
     index_name = "flashloom"
-    PineconeVectorStore.from_texts(
-        texts=[f"Source: {text.metadata['source']} \n\nContent: {text.page_content}"
-               for text in documents],
-        embedding=embeddings,
-        namespace=namespace,
-        index_name=index_name
-    )
+    index = pc.Index(name=index_name)
+    vectors = []
+    for i, document in enumerate(documents):
+        embedding = embeddings.embed_query(document.page_content)
+        vectors.append((
+            f"doc_{i}",
+            embedding,
+            {"source": document.metadata["source"], "text": document.page_content}
+        ))
+    index.upsert(vectors, namespace)
     main_topics = generate_topic(all_content)
 
     if message:
@@ -28,7 +32,6 @@ def upload_data_and_generate(namespace, document, message):
 
 def perform_rag(message, namespace, index_name):
     # initialising pinecone
-    pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
     pinecone_index = pc.Index(name=index_name)
 
     # querying the database

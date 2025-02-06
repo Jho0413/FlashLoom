@@ -9,6 +9,7 @@ import ErrorModal from "../components/common/errorModal";
 import { useQueryClient } from "@tanstack/react-query";
 import PermissionDialog from "./permissionDialog";
 import { useUser } from "@clerk/nextjs";
+import DropFileInput from "./dropFileInput";
 
 const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   const { user } = useUser();
@@ -37,20 +38,6 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
     }
     setInputError("");
     setTabName(newTab);
-  }
-
-  const handleFileUpload = (e) => {
-    e.preventDefault();
-    const file = e.target.files?.[0];
-    if (file && file.type && file.type === 'application/pdf') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [e.target.name]: file,
-      }));
-      setInputError("");
-    } else {
-      setInputError("Please upload a valid PDF file");
-    }
   }
 
   const handleSubmit = async () => {
@@ -167,13 +154,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
       case "PDF":
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <form>
-              <input 
-                type="file"
-                name="file"
-                onChange={handleFileUpload}
-              />
-            </form>
+            <DropFileInput formData={formData} setFormData={setFormData} setInputError={setInputError}/>
             <InputField 
               name="message"
               label="Enter additional information for better generation (Optional)"

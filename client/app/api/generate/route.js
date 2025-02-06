@@ -25,7 +25,7 @@ export async function POST(req) {
         break;
     }
 
-    const response = await fetch("http://127.0.0.1:5000/api/generate", {
+    const response = await fetch(process.env.FLASK_API_URL + "/api/generate", {
       method: "POST",
       body: JSON.stringify(body),
       headers: {

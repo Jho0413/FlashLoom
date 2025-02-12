@@ -8,10 +8,11 @@ import LoadingModal from "../components/common/loadingModal";
 import ErrorModal from "../components/common/errorModal";
 import { useQueryClient } from "@tanstack/react-query";
 import PermissionDialog from "./permissionDialog";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import DropFileInput from "./dropFileInput";
 
 const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
+  const { session } = useSession();
   const { user } = useUser();
   const [formData, setFormData] = useState({ message: "" });
   const [tabName, setTabName] = useState("Basic");
@@ -42,7 +43,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
 
   const handleSubmit = async () => {
     // access checking
-    const subscriptionData = queryClient.getQueryData([user.id, "subscriptionData"]);
+    const subscriptionData = queryClient.getQueryData([session.user.id, "subscriptionData"]);
     const { plan, generations, subscriptionEndTime } = subscriptionData;
     if ((plan !== "Free" || generations >= 3) && (plan === "Free" || Date.now() > subscriptionEndTime)) {
       setAccess(false);
@@ -85,12 +86,16 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
     setLoading(true);
     newFormData.append("message", formData.message);
     newFormData.append("method", tabName);
-    newFormData.append("userId", user.id);
     newFormData.append("plan", plan);
+
+    const token = await session.getToken();
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         body: newFormData,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       if (!response.ok) 
@@ -103,7 +108,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
 
       // only updating generations if free plan
       if (plan === "Free") {
-        queryClient.setQueryData([user.id, "subscriptionData"], (oldData) => {
+        queryClient.setQueryData([session.user.id, "subscriptionData"], (oldData) => {
           return {
             ...oldData, 
             generations: oldData.generations + 1 

@@ -18,7 +18,13 @@ const Flashcards = () => {
   const [error, setError] = useState(false);
 
   const fetchFlashcards = async () => {
-    const response = await fetch(`/api/flashcards?userId=${session?.user?.id}`);
+    const token = await session.getToken();
+    const response = await fetch(`/api/flashcards`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     if (!response.ok) 
       throw new Error("Unable to fetch flashcards");
     const data = await response.json();

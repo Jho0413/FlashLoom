@@ -23,8 +23,13 @@ const GenerateFlashcardBody = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchSubscriptionData = async () => {
-    const response = await fetch(`/api/stripe-subscription/subscription?userId=${session?.user?.id}`, {
+    const token = await session.getToken();
+    const response = await fetch(`/api/stripe-subscription/subscription`, {
       cache: "default",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
     if (!response.ok) {

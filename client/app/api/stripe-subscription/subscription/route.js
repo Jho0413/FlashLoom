@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { collection, query, where, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { plans } from "@/utils/plans";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req) {
     let event;
@@ -66,8 +67,7 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const { userId } = auth();
 
     if (!userId) 
         return NextResponse.json({ message: "Missing user id" }, { status: 400 });

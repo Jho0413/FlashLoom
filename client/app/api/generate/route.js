@@ -1,4 +1,5 @@
 import { db } from "@/firebase";
+import { auth } from "@clerk/nextjs/server";
 import { doc, increment, updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
@@ -7,8 +8,13 @@ export async function POST(req) {
     const formData = await req.formData();
     const method = formData.get("method");
     const message = formData.get("message");
-    const userId = formData.get("userId");
     const plan = formData.get("plan");
+
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     let body = { method: method, message: message, userId: userId };
     switch (method) {
       case "Youtube":

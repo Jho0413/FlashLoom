@@ -1,11 +1,15 @@
 import { db } from "@/firebase";
+import { auth } from "@clerk/nextjs/server";
 import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
     const { id } = params;
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const { userId } = auth();
+
+    if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     try {
         const docRef = doc(db, "users", userId, "flashcardSets", id);

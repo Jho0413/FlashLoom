@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
 import { 
     Box, 
     Button, 
@@ -14,7 +14,7 @@ import React, { useState } from "react";
 import SuccessModal from "./successModal";
 
 const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
-  const { user } = useUser();
+  const { session } = useSession();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
@@ -23,13 +23,16 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
   const queryClient = useQueryClient();
 
   const saveFlashcardSet = async () => {
+    const token = await session.getToken();
     const response = await fetch("/api/flashcards/save", {
       method: "POST",
       body: JSON.stringify({
-        userId: user.id,
         name: name,
         flashcards: flashcards, 
-      })
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
     
     if (!response.ok) 
@@ -41,10 +44,10 @@ const SaveButtonDialog = ({ flashcards, setError, setLoading }) => {
   
   const mutation = useMutation({
     mutationFn: saveFlashcardSet,
-    mutationKey: [user.id, "flashcards"],
+    mutationKey: [session.user.id, "flashcards"],
     onSuccess: (id) => {
-      if (queryClient.getQueryData([user.id, "flashcards"]))
-        queryClient.setQueryData([user.id, "flashcards"], (oldFlashcards) => {
+      if (queryClient.getQueryData([session.user.id, "flashcards"]))
+        queryClient.setQueryData([session.user.id, "flashcards"], (oldFlashcards) => {
           oldFlashcards.unshift({ id: id, name: name });
           return oldFlashcards;
         });

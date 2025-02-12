@@ -12,10 +12,10 @@ import { useRouter } from "next/navigation";
 import { pricingDescriptions } from "../../../utils/pricingDescriptions";
 import getStripe from "@/utils/get-stripe";
 import { motion } from "framer-motion";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
 
 const PricingGridItem = ({ title, price, description, disabled }) => {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, session } = useSession();
   const router = useRouter();
 
   const selectPlan = async () => {
@@ -30,18 +30,16 @@ const PricingGridItem = ({ title, price, description, disabled }) => {
       router.push("/generate");
       return;
     }
-
+    const token = await session.getToken();
     const checkoutSession = await fetch("/api/checkout_sessions", {
       method: "POST",
       headers: {
-        origin: "localhost:3000",
-        plan: title,
-        user: user.id,
-      }
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ plan: title })
     });
 
     const checkoutSessionJSON = await checkoutSession.json();
-    console.dir(checkoutSessionJSON, { depth: null });
 
     const stripe = await getStripe();
     await stripe.redirectToCheckout({ sessionId: checkoutSessionJSON.id });

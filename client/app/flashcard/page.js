@@ -15,7 +15,13 @@ export default function Flashcard({ searchParams }) {
   const [flippedStates, setFlippedStates] = useState({});
 
   const fetchFlashcardSet = async () => {
-    const response = await fetch(`/api/flashcards/${flashcardSetId}?userId=${session?.user?.id}`);
+    const token = await session.getToken();
+    const response = await fetch(`/api/flashcards/${flashcardSetId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     if (!response.ok)
       throw new Error("Unable to fetch flashcardSet");
     const data = await response.json();

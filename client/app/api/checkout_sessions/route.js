@@ -3,20 +3,24 @@ import { NextResponse } from "next/server";
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { plans } from "@/utils/plans";
+import { auth } from "@clerk/nextjs/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-    const plan = req.headers.get('plan');
-    const userId = req.headers.get('user');
+    const { plan } = await req.json();
+    const { userId } = auth();
+    if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
-    const { stripeCustomerId } = docSnap.data();
-
-    const price_id = plans[plan];
-    
     try {
+        const docRef = doc(db, "users", userId);
+        const docSnap = await getDoc(docRef);
+        const { stripeCustomerId } = docSnap.data();
+    
+        const price_id = plans[plan];
+
         const params = {
             mode: 'subscription',
             payment_method_types: ['card'],

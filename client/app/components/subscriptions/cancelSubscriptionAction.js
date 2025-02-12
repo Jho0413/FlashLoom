@@ -1,13 +1,13 @@
 "use client"
 
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
 import { Button, Box, Typography, CircularProgress } from "@mui/material";
 import { useState } from "react";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 const CancelSubscriptionAction = ({ cancelled }) => {
-  const { user } = useUser();
+  const { session } = useSession();
   const [nextStep, setNextStep] = useState(false);
   const [confirmationValue, setConfirmationValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,12 +21,13 @@ const CancelSubscriptionAction = ({ cancelled }) => {
 
   const cancelSubscription = async () => {
     setLoading(true);
+    const token = await session.getToken();
     try {
       const response = await fetch("/api/stripe-subscription/cancel", {
         method: "POST",
-        body: JSON.stringify({
-          userId: user.id,
-        })
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       if (!response.ok)

@@ -1,12 +1,15 @@
 import { db } from "@/firebase";
+import { auth } from "@clerk/nextjs/server";
 import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 export async function POST(req) {
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-    const data = await req.json();
-    const { userId } = data;
+    const { userId } = auth();
+    if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     try {
         const userRef = doc(db, "users", userId);

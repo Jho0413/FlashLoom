@@ -45,5 +45,5 @@ export async function POST(req) {
     console.log(`Stripe customer created: ${customer.id}`);
   }
 
-  return NextResponse(null, { status: 200 });
+  return new NextResponse(null, { status: 200 });
 }

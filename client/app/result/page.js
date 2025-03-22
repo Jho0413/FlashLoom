@@ -1,10 +1,11 @@
 'use client'
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
-import { CircularProgress, Typography, Container, Box, Button } from '@mui/material'
+import { Typography, Container, Button } from '@mui/material'
+import LoadingPage from '../components/common/loadingPage'
+import ErrorPage from '../components/common/errorPage'
 
 const ResultPage = ({ searchParams }) => {
-    const router  = useRouter();
     const { session_id } = searchParams;
     const [session, setSession] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -14,68 +15,75 @@ const ResultPage = ({ searchParams }) => {
         const fetchCheckoutSession = async () => {
             if (!session_id) return
             try {
-                const response = await fetch(`/api/checkout_sessions?session_id=${session_id}`)
-                const data = await response.json()
+                const response = await fetch(`/api/checkout_sessions?session_id=${session_id}`);
+                const data = await response.json();
                 if (response.ok) {
-                    setSession(data)
+                    setSession(data);
                 } else {
-                    setError(data.error)
+                    setError(data.error);
                 }
             } catch (err) {
-                setError('An error occurred while fetching the checkout session')
+                setError('An error occurred while fetching the checkout session');
             }
             finally {
-                setLoading(false)
+                setLoading(false);
             }
         }
-        fetchCheckoutSession()
+        fetchCheckoutSession();
     }, [session_id])
+    
     if (loading) {
-        return(
-            <Container maxwidth="100vw" sx={{display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: 'center', mt: 4, height: "100vh", mt: 0 }}>
-                <CircularProgress />
-                <Typography variant="h6" sx={{ mt: 2 }}>Loading...</Typography>
-            </Container>
-        )
+        return <LoadingPage />
     }
     if (error) {
-        return(
-            <Container maxwidth="100vw" sx={{display: "flex", justifyContent: "center", alignItems: "center", textAlign: 'center', mt: 4, height: "100vh", mt: 0 }}>
-                <Typography variant="h6">Error: {error}</Typography>
-            </Container>
-        )
+        return <ErrorPage />
     }
+
     return (
-        <Container maxwidth="100vw" sx={{textAlign: 'center', mt: 4, height: "100vh", overflowY: 'auto', mt: 0, p: 10 }}>
+        <Container 
+          maxwidth="100vw" 
+          sx={{
+            height: "100vh", 
+            overflowY: 'auto', 
+          }}>
             {session.payment_status === 'paid' ? (
-                <>
-                    <Typography variant="h4">
-                        Thank you for your purchase!
-                    </Typography>
-                    <Box sx={{mt:22}}>
-                        <Typography variant="body1"> We have received your payment. You will receive an email with the order details shortly.</Typography>
-                    </Box>
-                    <Button sx={{mt:2}}variant="contained" onClick={() => router.push('/')}>
-                        Back to Main Page
-                    </Button>
-                </>
+                <ResultContent 
+                  header="Payment Succeeded!"
+                  body="We have received your payment. Go generate flashcards to start using your subscription!"
+                />
             ) : (
-                <>
-                    <div>    
-                        <Typography variant="h3">
-                            Payment failed.
-                        </Typography>
-                        <Box sx={{mt:2}}>
-                            <Typography variant="body1"> Your payment was not successful. Please try again. </Typography>
-                        </Box>
-                    </div>
-                    <Button sx={{mt:2}}variant="contained" onClick={() => router.push('/')}>
-                        Back to Main Page
-                    </Button>
-                </>
+                <ResultContent 
+                  header="Payment Failed :("
+                  body="Your payment was not successful. Please try again!"
+                />
             )}
         </Container>
 )}
 
+
+const ResultContent = ({ header, body }) => {
+  const router  = useRouter();
+
+  return (
+    <Container
+      maxWidth="md"
+      sx={{
+        height: "100%",
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <Typography variant='h3'>{header}</Typography>
+      <Typography variant="body1">{body}</Typography>
+      <Button variant="contained" onClick={() => router.push('/')}>
+        Back to Main Page
+      </Button>
+    </Container>
+  )
+}
 
 export default ResultPage;

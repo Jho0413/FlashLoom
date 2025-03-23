@@ -1,8 +1,7 @@
 import formatUnixToDate from "@/utils/convertUNIXToDate";
-import { useSession, useUser } from "@clerk/nextjs";
-import { Box, Divider, Typography } from "@mui/material";
+import { useSession } from "@clerk/nextjs";
+import { Box, Button, Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import CancelSubscriptionAction from "./cancelSubscriptionAction";
 import LoadingPage from "../common/loadingPage";
 import ErrorPage from "../common/errorPage";
 import SessionModal from "../common/sessionModal";
@@ -96,8 +95,8 @@ const SubscriptionPageBody = () => {
       />
       <SubscriptionPageDivider />
       <SubscriptionPageSection
-        subheader="Cancel Subscription"
-        content1={<CancelSubscriptionAction cancelled={cancelled}/>}
+        subheader="Manage Subscription"
+        content1={<ManageSubscriptionButton email={session.user.emailAddresses}/>}
         lastRow
         flexContent1={2}
       />
@@ -129,6 +128,22 @@ const SubscriptionPageContent = ({ content, flex }) => {
 
 const SubscriptionPageDivider = () => {
   return <Divider sx={{ fontSize: "1px", backgroundColor: "rgba(0, 0, 0, 0.07)" }}/>;
+}
+
+const ManageSubscriptionButton = ({ email }) => {
+  return (
+    <Button 
+      href={"https://billing.stripe.com/p/login/test_cN27uT8mX5LmdJC144?prefilled_email=" + email}
+      variant="text" 
+      size="small" 
+      sx={{ 
+        fontSize: 12, 
+        textTransform: "none" 
+      }}
+    >
+      Manage Subscription
+    </Button>
+  )
 }
 
 export default SubscriptionPage;

@@ -18,32 +18,39 @@ export async function POST(req) {
     return new Response(`Webhook Error: ${err.message}`, { status: 404 });
   }
 
-  // Handle user.created event from Clerk
-  if (event.type === 'user.created') {
-    const userId = event.data.id; // Clerk user ID
-    const email = event.data.email; // User's email
-
-    // Create a Stripe customer
-    const customer = await stripe.customers.create({
-      email: email,
-      metadata: {
-        clerkUserId: userId, // Store Clerk user ID for reference
-      },
-    });
-
-    // Save customer.id to your Firestore database under the user's document
-    const userDocRef = doc(db, "users",  userId); // Reference to the user document
-    await setDoc(userDocRef, {
-        stripeCustomerId: customer.id, // Save the Stripe customer ID
-        subscriptionPlan: "Free",
-        generations: 0,
-        subscriptionEndTime: null,
-        subscriptionId: null,
-        cancelled: true,
-    }, { merge: true });
-
-    console.log(`Stripe customer created: ${customer.id}`);
+  try {
+    // Handle user.created event from Clerk
+    if (event.type === 'user.created') {
+      console.log(event.data.email_address);
+      const userId = event.data.id; // Clerk user ID
+      const emails = event.data.email_addresses; // User's email
+      const { email_address } = emails[0];
+  
+      // Create a Stripe customer
+      const customer = await stripe.customers.create({
+        email: email_address,
+        metadata: {
+          clerkUserId: userId, // Store Clerk user ID for reference
+        },
+      });
+  
+      // Save customer.id to your Firestore database under the user's document
+      const userDocRef = doc(db, "users",  userId); // Reference to the user document
+      await setDoc(userDocRef, {
+          stripeCustomerId: customer.id, // Save the Stripe customer ID
+          subscriptionPlan: "Free",
+          generations: 0,
+          subscriptionEndTime: null,
+          subscriptionId: null,
+          cancelled: true,
+      }, { merge: true });
+  
+      console.log(`Stripe customer created: ${customer.id}`);
+      return NextResponse.json({ message: "Successfully created" }, { status: 200 });
+    } else {
+      return NextResponse.json({ error: "Wrong event type sent" }, { status: 400 });
+    }
+  } catch (error) {
+    return NextResponse.json({ error: error }, { status: 500 });
   }
-
-  return new NextResponse(null, { status: 200 });
 }

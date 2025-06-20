@@ -1,10 +1,11 @@
 import os
 from pinecone import Pinecone
-from embeddings import embeddings
 from utils import system_prompt, generate_flashcards, generate_topic
 from text_splitter import split_documents
+from sentence_transformers import SentenceTransformer
 
 pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
 def upload_data_and_generate(namespace, document, message):
@@ -15,7 +16,7 @@ def upload_data_and_generate(namespace, document, message):
     index = pc.Index(name=index_name)
     vectors = []
     for i, document in enumerate(documents):
-        embedding = embeddings.embed_query(document.page_content)
+        embedding = model.encode(document.page_content).tolist()
         vectors.append((
             f"doc_{i}",
             embedding,
@@ -35,7 +36,7 @@ def perform_rag(message, namespace, index_name):
     pinecone_index = pc.Index(name=index_name)
 
     # querying the database
-    query_embedding = embeddings.embed_query(message)
+    query_embedding = model.encode(message).tolist()
     top_matches = pinecone_index.query(vector=query_embedding, top_k=10, include_metadata=True, namespace=namespace)
 
     # extracting the context from the matches returned

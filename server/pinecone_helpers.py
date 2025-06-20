@@ -1,12 +1,12 @@
 import os
 from pinecone import Pinecone, SearchQuery, SearchRerank, RerankModel
 from utils import system_prompt, generate_flashcards, generate_topic
-from text_splitter import split_documents
+from text_splitter import split_documents, split_text
 
 pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
 index = pc.Index(os.environ["PINECONE_INDEX_NAME"])
 
-def upload_data_and_generate(namespace, document, message):
+def upload_documents_and_generate(namespace, document, message):
     all_content = document[0].page_content
     documents = split_documents(document)
 
@@ -16,13 +16,29 @@ def upload_data_and_generate(namespace, document, message):
             {"id": f"doc_{i}", "text": document.page_content}
         ))
     index.upsert_records(namespace, vectors)
-    main_topics = generate_topic(all_content)
+    return perform_rag_helper(all_content, namespace, message)
 
+
+def upload_texts_and_generate(namespace, all_content, message):
+    texts = split_text(all_content)
+    
+    vectors = []
+    for i, text in enumerate(texts):
+        vectors.append((
+            {"id": f"text_{i}", "text": text}
+        ))
+    index.upsert_records(namespace, vectors)
+    return perform_rag_helper(all_content, namespace, message)
+    
+    
+def perform_rag_helper(all_content, namespace, message):
+    main_topics = generate_topic(all_content)
+    
     if message:
         return perform_rag(message, namespace)
     else:
         return perform_rag(main_topics, namespace)
-
+    
 
 def perform_rag(message, namespace):
     # querying the database

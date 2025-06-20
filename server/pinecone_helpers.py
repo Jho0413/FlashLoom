@@ -1,46 +1,48 @@
 import os
-from pinecone import Pinecone
+from pinecone import Pinecone, SearchQuery, SearchRerank, RerankModel
 from utils import system_prompt, generate_flashcards, generate_topic
 from text_splitter import split_documents
-from sentence_transformers import SentenceTransformer
 
-pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+index = pc.Index(os.environ["PINECONE_INDEX_NAME"])
 
 def upload_data_and_generate(namespace, document, message):
     all_content = document[0].page_content
     documents = split_documents(document)
 
-    index_name = "flashloom"
-    index = pc.Index(name=index_name)
     vectors = []
     for i, document in enumerate(documents):
-        embedding = model.encode(document.page_content).tolist()
         vectors.append((
-            f"doc_{i}",
-            embedding,
-            {"source": document.metadata["source"], "text": document.page_content}
+            {"id": f"doc_{i}", "text": document.page_content}
         ))
-    index.upsert(vectors, namespace)
+    index.upsert_records(namespace, vectors)
     main_topics = generate_topic(all_content)
 
     if message:
-        return perform_rag(message, namespace, index_name)
+        return perform_rag(message, namespace)
     else:
-        return perform_rag(main_topics, namespace, index_name)
+        return perform_rag(main_topics, namespace)
 
 
-def perform_rag(message, namespace, index_name):
-    # initialising pinecone
-    pinecone_index = pc.Index(name=index_name)
-
+def perform_rag(message, namespace):
     # querying the database
-    query_embedding = model.encode(message).tolist()
-    top_matches = pinecone_index.query(vector=query_embedding, top_k=10, include_metadata=True, namespace=namespace)
+    top_matches = index.search_records(
+        namespace=namespace,
+        query=SearchQuery(
+            inputs={
+                "text": message,
+            },
+            top_k=10
+        ),
+        rerank=SearchRerank(
+            model=RerankModel.Bge_Reranker_V2_M3,
+            rank_fields=["text"],
+            top_n=10,
+        ),
+    )
 
     # extracting the context from the matches returned
-    context_list = [item['metadata']['text'] for item in top_matches['matches']]
+    context_list = [item['fields']['text'] for item in top_matches['result']['hits']]
     additional_context = "\n".join(context_list)
 
     # generating prompt

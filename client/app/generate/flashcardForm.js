@@ -116,6 +116,7 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
         });
       }
     } catch (error) {
+      console.error("Error generating flashcards:", error);
       setError(true);
     } finally {
       setInputError("");

@@ -40,11 +40,13 @@ export async function POST(req) {
     });
 
     if (!response.ok) {
+      console.error("Flask API returned non-OK status:", response.status);
       throw new Error("An internal error occurred");
     }
 
     const data = await response.json();
     const { flashcards } = data;
+    console.info("Received flashcards from Flask API");
     if (plan === "Free") {
       const docRef = doc(db, "users", userId);
       await updateDoc(docRef, {
@@ -54,6 +56,7 @@ export async function POST(req) {
     return NextResponse.json({ flashcards: flashcards }, { status: 200 });
 
   } catch (error) {
+    console.error("Error in /api/generate route:", error);
     return NextResponse.json({ error_message: error }, { status: 500 });
   }
 }

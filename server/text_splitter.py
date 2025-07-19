@@ -1,3 +1,4 @@
+import logging
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 text_splitter = RecursiveCharacterTextSplitter(
@@ -7,11 +8,16 @@ text_splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", " ", ""]
 )
 
-
 def split_documents(document):
-    documents = text_splitter.split_documents(document)
-    return documents
-
+    try:
+        return text_splitter.split_documents(document)
+    except Exception as e:
+        logging.exception(f"Error in split_documents: {e}")
+        raise
 
 def split_text(text):
-    return text_splitter.split_text(text)
+    try:
+        return text_splitter.split_text(text)
+    except Exception as e:
+        logging.exception(f"Error in split_text: {e}")
+        raise

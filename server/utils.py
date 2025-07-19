@@ -2,6 +2,7 @@ import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 import re
+import logging
 
 load_dotenv()
 
@@ -52,21 +53,35 @@ def system_prompt(user_message, additional_content):
 
 
 def generate_topic(content):
-    prompt = f"""
-    You are a summarizer for a large amount of content and I want you to summarize the content into 1 sentence that 
-    describes the main topics covered in this content. The use case for this is to query the vector database based on 
-    the topics of the content I have given you. I want you to create in the format of "I want to know more about 
-    (topics that you will find)"
-    
-    Here is the content: {content}
-    
-    Ensure that: 
-    - The main topics are covered in this 1 sentence
-    """
-    response = model.generate_content(prompt)
-    return response.text
+    try:
+        prompt = f"""
+        You are a summarizer for a large amount of content and I want you to summarize the content into 1 sentence that 
+        describes the main topics covered in this content. The use case for this is to query the vector database based on 
+        the topics of the content I have given you. I want you to create in the format of "I want to know more about 
+        (topics that you will find)"
+        
+        Here is the content: {content}
+        
+        Ensure that: 
+        - The main topics are covered in this 1 sentence
+        """
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        logging.exception(f"Error in generate_topic: {e}")
+        raise
 
 
 def generate_flashcards(prompt):
-    response = model.generate_content(prompt)
-    return re.search(r'\[.*]', response.text, re.DOTALL).group()
+    try:
+        logging.info("Generating flashcards from prompt.")
+        response = model.generate_content(prompt)
+        match = re.search(r'\[.*]', response.text, re.DOTALL)
+        if not match:
+            logging.error("No flashcard list found in model response.")
+            raise ValueError("No flashcard list found in model response.")
+        logging.info("Flashcards generated successfully.")
+        return match.group()
+    except Exception as e:
+        logging.exception(f"Error in generate_flashcards: {e}")
+        raise

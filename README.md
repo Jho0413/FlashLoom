@@ -1,11 +1,11 @@
 # FlashLoom
 
-FlashLoom is a web application that follows the **Software as a Service (Saas)** model, allowing users to summarize and test their understandings on anything by generating flashcards using AI from different input sources:
+FlashLoom is a web application that follows the **Software as a Service (Saas)** model, allowing users to summarize and test their understanding on anything by generating flashcards using AI from different input sources:
 - Text prompts
 - YouTube URLS (extracting key points from videos)
 - PDF files (summarising content from files)
 
-This web application has been deployed using **Vercel** and can be accessed here: https://flash-loom.vercel.app/.
+This web application has been deployed using **Vercel** and can be accessed here: https://flash-loom.vercel.app/. The Flask application has been deployed using **Heroku**.
 Since it is a **cloud-based SaaS platform**, users can access it from any device without needing to install software. The platform offers a **free trial**, after which users can subscribe to a paid plan to continue using the service.
 
 ## Features

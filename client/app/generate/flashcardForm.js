@@ -3,7 +3,7 @@
 import { Box, Tab, Button, Typography, Container } from "@mui/material";
 import { TabContext, TabPanel, TabList } from "@mui/lab";
 import InputField from "../components/flashcards/inputField";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoadingModal from "../components/common/loadingModal";
 import ErrorModal from "../components/common/errorModal";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,6 @@ import DropFileInput from "./dropFileInput";
 
 const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   const { session } = useSession();
-  const { user } = useUser();
   const [formData, setFormData] = useState({ message: "" });
   const [tabName, setTabName] = useState("Basic");
   const [loading, setLoading] = useState(false);
@@ -21,6 +20,13 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
   const [inputError, setInputError] = useState("");
   const [access, setAccess] = useState(true);
   const queryClient = useQueryClient();
+
+  const isPolling = useRef(true);
+
+  useEffect(() => {
+    isPolling.current = true;
+    return () => { isPolling.current = false; };
+  }, []);
 
   const handleTabChange = (event, newTab) => {
     event.preventDefault();
@@ -99,28 +105,52 @@ const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
       });
 
       if (!response.ok) 
-        throw new Error("Unable to generate flashcards");
+        throw new Error("Unable to start generation task");
 
-      const data = await response.json();
-      const { flashcards } = data;
-      setFlashcards(JSON.parse(flashcards));
-      setFlippedStates({}); 
+      const { task_id } = await response.json();
 
-      // only updating generations if free plan
-      if (plan === "Free") {
-        queryClient.setQueryData([session.user.id, "subscriptionData"], (oldData) => {
-          return {
-            ...oldData, 
-            generations: oldData.generations + 1 
+      const pollTaskStatus = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/task-status/${task_id}`);
+          const data = await response.json();
+
+          if (!isPolling.current) return;
+
+          if (data.status === "SUCCESS") {
+            if (plan === "Free") {
+              await fetch("/api/increment-generations", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              queryClient.setQueryData([session.user.id, "subscriptionData"], (oldData) => ({
+                ...oldData,
+                generations: oldData.generations + 1
+              }));
+            }
+            setFlashcards(JSON.parse(data.flashcards));
+            setFlippedStates({});
+            isPolling.current = false;
+            setLoading(false);
+          } else if (data.status === "FAILURE") {
+            throw new Error("Task failed: " + data.error); 
+          } else {
+            setTimeout(pollTaskStatus, 2000);
           }
-        });
-      }
+        } catch (pollErr) {
+          console.error("Error polling task:", pollErr);
+          setLoading(false);
+          setError(true); 
+          isPolling.current = false;
+        }
+      };
+
+      pollTaskStatus();
     } catch (error) {
       console.error("Error generating flashcards:", error);
+      setLoading(false);
       setError(true);
     } finally {
       setInputError("");
-      setLoading(false);
     }
   }
 

@@ -1,6 +1,4 @@
-import { db } from "@/firebase";
 import { auth } from "@clerk/nextjs/server";
-import { doc, increment, updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -8,7 +6,6 @@ export async function POST(req) {
     const formData = await req.formData();
     const method = formData.get("method");
     const message = formData.get("message");
-    const plan = formData.get("plan");
 
     const { userId } = auth();
     if (!userId) {
@@ -31,7 +28,7 @@ export async function POST(req) {
         break;
     }
 
-    const response = await fetch(process.env.FLASK_API_URL + "/api/generate", {
+    const response = await fetch(process.env.NEXT_PUBLIC_FLASK_API_URL + "/generate", {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -44,17 +41,8 @@ export async function POST(req) {
       throw new Error("An internal error occurred");
     }
 
-    const data = await response.json();
-    const { flashcards } = data;
-    console.info("Received flashcards from Flask API");
-    if (plan === "Free") {
-      const docRef = doc(db, "users", userId);
-      await updateDoc(docRef, {
-        generations: increment(1)
-      });
-    }
-    return NextResponse.json({ flashcards: flashcards }, { status: 200 });
-
+    const taskData = await response.json();
+    return NextResponse.json({ task_id: taskData.task_id }, { status: 202 });
   } catch (error) {
     console.error("Error in /api/generate route:", error);
     return NextResponse.json({ error_message: error }, { status: 500 });

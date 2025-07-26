@@ -25,7 +25,10 @@ Since it is a **cloud-based SaaS platform**, users can access it from any device
 ## Technologies Used
 
 - **Frontend**: NextJS, React
-- **Backend**: NextJS (subscription and user management), Flask (generating flashcards)
+- **Backend**:
+  - NextJS (subscription and user management)
+  - Flask (generating flashcards)
+  - Celery + Redis (background task queue — task broker + result storage)
 - **Database**: Firebase
 - **Session management and authentication**: Clerk
 - **Payments**: Stripe

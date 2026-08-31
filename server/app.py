@@ -1,6 +1,10 @@
 import os
 import logging
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, request, jsonify
 from tasks import generate_flashcards
 from flask_cors import CORS

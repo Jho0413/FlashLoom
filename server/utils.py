@@ -7,7 +7,7 @@ import logging
 load_dotenv()
 
 genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel(os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"))
 
 
 def system_prompt(user_message, additional_content):

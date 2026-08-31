@@ -1,87 +1,20 @@
-import {
-  Box,
-  Grid,
-  Typography,
-  Divider,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
 import { featureDescriptions } from "../../../utils/featureDescriptions";
-import { motion } from "framer-motion";
 
-const FeatureGridItem = ({ title, description }) => {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
+export default function FeaturesGrid() {
   return (
-    <Grid
-      item
-      xs={12}
-      md={4}
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        color: "white",
-      }}
-    >
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        style={{
-          width: isSmallScreen ? "100%" : "90%",
-        }}
-      >
-        <Box
-          sx={{
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-around",
-            minHeight: 200,
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-            border: "1px solid #333",
-            borderRadius: 3,
-            backgroundColor: "#1e1e1e",
-            transition: "background-color 0.3s ease",
-            "&:hover": {
-              backgroundColor: "#292929",
-            },
-          }}
+    <div className="mx-auto grid max-w-[1200px] grid-cols-3 max-[600px]:grid-cols-1">
+      {featureDescriptions.map((feature, index) => (
+        <div
+          key={feature.title}
+          className="border-l border-rule px-9 py-11 first:border-l-0 max-[600px]:border-l-0 max-[600px]:border-t max-[600px]:first:border-t-0"
         >
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: "bold", color: "#5c84f8" }}
-          >
-            {title}
-          </Typography>
-          <Divider sx={{ my: 2, borderColor: "#5c84f8" }} />
-          <Typography>{description}</Typography>
-        </Box>
-      </motion.div>
-    </Grid>
+          <span className="mono-label">{String(index + 1).padStart(2, "0")}</span>
+          <h3 className="mt-3 text-[18px] font-semibold tracking-[-0.01em] text-ink">{feature.title}</h3>
+          <p className="mt-2 text-pretty text-[14.5px] leading-[1.65] text-ink-muted">
+            {feature.description}
+          </p>
+        </div>
+      ))}
+    </div>
   );
-};
-
-const FeatureGrid = () => {
-  return (
-    <Box sx={{ px: 3, py: 5, backgroundColor: "#121212", borderRadius: 4 }}>
-      <Typography
-        variant="h4"
-        color={"#5c84f8"}
-        sx={{ mb: 4, fontWeight: "bold", textAlign: "center" }}
-      >
-        Features
-      </Typography>
-      <Grid container spacing={3}>
-        {featureDescriptions.map((feature, index) => (
-          <FeatureGridItem key={index} {...feature} />
-        ))}
-      </Grid>
-    </Box>
-  );
-};
-
-export default FeatureGrid;
+}

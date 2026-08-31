@@ -1,5 +1,5 @@
-import MainLayout from "../components/common/mainLayout";
+export const metadata = { title: "Generate flashcards · FlashLoom" };
 
-export default function GeneratePageLayout({ children }) {
-  return <MainLayout title="Generate Flashcards">{children}</MainLayout>
+export default function GenerateLayout({ children }) {
+  return children;
 }

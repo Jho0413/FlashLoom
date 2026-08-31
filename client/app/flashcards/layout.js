@@ -1,5 +1,5 @@
-import MainLayout from "../components/common/mainLayout";
+export const metadata = { title: "My Flashcards · FlashLoom" };
 
 export default function FlashcardsLayout({ children }) {
-  return <MainLayout title="Your Flashcards">{children}</MainLayout>
+  return children;
 }

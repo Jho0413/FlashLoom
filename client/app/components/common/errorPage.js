@@ -1,52 +1,35 @@
-import { Box, Container, Typography, Button } from "@mui/material";
+"use client";
+
 import { useRouter } from "next/navigation";
+import Button from "../ui/Button";
 
-const ErrorPage = ({ titleSize, disableButton }) => {
-
+export default function ErrorPage({ compact = false, disableButton = false }) {
   const router = useRouter();
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        alignItems: "center",
-      }}
-    >
-      <Container 
-        maxWidth="sm" 
-        sx={{
-          textAlign: 'center',
-          padding: 4,
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundColor: '#f9f9f9',
-        }}
-      >
-        <Box>
-          <Typography 
-            variant={titleSize ? titleSize : "h4"} 
-            color="error" 
-            gutterBottom
-          >
-            Oops! Something Went Wrong
-          </Typography>
-          <Typography variant="body1" color="textSecondary">
-            We encountered an issue and are working to resolve it. Please try again later.
-          </Typography>
-        </Box>
-        {!disableButton && <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={() => router.push("/")}
-          sx={{ marginTop: 2 }}
+    <div className="flex min-h-[50vh] items-center justify-center px-5">
+      <div className="w-full max-w-[440px] rounded-xl border border-hairline bg-surface p-10 text-center">
+        <span className="mono-label text-danger">error</span>
+        <h1
+          className={
+            compact
+              ? "mt-3 text-[20px] font-semibold text-ink"
+              : "mt-3 text-[26px] font-semibold tracking-[-0.02em] text-ink"
+          }
         >
-          Go to Home Page
-        </Button>}
-      </Container>      
-    </Box>
-  )
+          Something went wrong
+        </h1>
+        <p className="mx-auto mt-2 max-w-[320px] text-pretty text-[14px] text-ink-muted">
+          We hit an issue loading this. Please try again in a moment.
+        </p>
+        {!disableButton ? (
+          <div className="mt-6 flex justify-center">
+            <Button variant="secondary" onClick={() => router.push("/")}>
+              Back to home
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
-
-export default ErrorPage;

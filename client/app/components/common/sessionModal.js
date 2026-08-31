@@ -1,52 +1,20 @@
-import { Box, Modal, Container, Typography, Button } from "@mui/material";
+"use client";
+
 import { useRouter } from "next/navigation";
+import Dialog from "../ui/Dialog";
+import Button from "../ui/Button";
 
-const SessionModal = ({ sessionExpired }) => {
-
+export default function SessionModal({ sessionExpired }) {
   const router = useRouter();
 
   return (
-    <Modal
-      open={sessionExpired}
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+    <Dialog
+      open={!!sessionExpired}
+      dismissable={false}
+      title="Session expired"
+      actions={<Button onClick={() => router.push("/sign-in")}>Sign in</Button>}
     >
-      <Container 
-        maxWidth="xs" 
-        sx={{
-          textAlign: 'center',
-          padding: 4,
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundColor: '#f9f9f9',
-        }}
-      >
-        <Box>
-          <Typography 
-            variant="h4"
-            color="error" 
-            gutterBottom
-          >
-            Session Timeout :/
-          </Typography>
-          <Typography variant="body1" color="textSecondary">
-            Click here to log in and continue to generate flashcards!
-          </Typography>
-        </Box>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={() => router.push("/sign-in")}
-          sx={{ marginTop: 2 }}
-        >
-          Go to Login Page
-        </Button>
-      </Container>
-    </Modal>
+      Your session timed out. Sign in again to keep going.
+    </Dialog>
   );
 }
-
-export default SessionModal;

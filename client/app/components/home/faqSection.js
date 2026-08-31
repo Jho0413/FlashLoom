@@ -1,71 +1,28 @@
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { FAQs } from "../../../utils/faqs";
-import { motion } from "framer-motion";
 
-const FaqItem = ({ question, answer }) => {
+export default function FaqSection() {
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Box
-        sx={{
-          p: 4,
-          border: "1px solid #333",
-          borderRadius: 3,
-          backgroundColor: "#1e1e1e",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          "&:hover": {
-            backgroundColor: "#292929",
-          },
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" sx={{ color: "#5c84f8" }}>
-          {question}
-        </Typography>
-        <Typography>{answer}</Typography>
-      </Box>
-    </motion.div>
+    <div className="mx-auto max-w-prose px-10 py-20 max-[600px]:px-5">
+      <h2 className="text-[30px] font-semibold tracking-[-0.025em] text-ink">FAQ</h2>
+      <div className="mt-6">
+        {FAQs.map((faq) => (
+          <details key={faq.question} className="group border-t border-hairline py-5 last:border-b">
+            <summary className="flex cursor-pointer list-none items-start gap-3 text-[16px] font-medium leading-[1.5] text-ink [&::-webkit-details-marker]:hidden">
+              <span
+                aria-hidden="true"
+                className="mt-[2px] font-mono text-[13px] text-ink-faint group-open:text-accent"
+              >
+                <span className="group-open:hidden">[+]</span>
+                <span className="hidden group-open:inline">[-]</span>
+              </span>
+              <span>{faq.question}</span>
+            </summary>
+            <p className="mt-3 pl-[34px] text-pretty text-[14.5px] leading-[1.65] text-ink-muted">
+              {faq.answer}
+            </p>
+          </details>
+        ))}
+      </div>
+    </div>
   );
-};
-
-const FaqSection = () => {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        px: isSmallScreen ? 2 : 5,
-        py: 5,
-        backgroundColor: "#121212",
-        borderRadius: 4,
-      }}
-    >
-      <Typography
-        variant="h4"
-        color="#5c84f8"
-        fontWeight="bold"
-        textAlign="center"
-        sx={{ mb: 4 }}
-      >
-        FAQs
-      </Typography>
-      {FAQs.map((faq, index) => (
-        <FaqItem key={index} {...faq} />
-      ))}
-    </Box>
-  );
-};
-
-export default FaqSection;
+}

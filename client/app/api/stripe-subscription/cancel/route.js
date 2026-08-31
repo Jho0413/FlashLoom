@@ -1,10 +1,9 @@
-import { db } from "@/firebase";
-import { auth } from "@clerk/nextjs/server";
-import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import Stripe from "stripe";
+import { db } from "@/firebaseAdmin";
 
-export async function POST(req) {
+export async function POST() {
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
     const { userId } = auth();
     if (!userId) {
@@ -12,17 +11,14 @@ export async function POST(req) {
     }
 
     try {
-        const userRef = doc(db, "users", userId);
-        const user = await getDoc(userRef);
-        if (!user.exists())
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (!userDoc.exists)
             throw new Error("User not found in the database");
 
-        // obtaining subscription id of user
-        const { subscriptionId } = user.data();
+        const { subscriptionId } = userDoc.data();
 
-        // updating subscription in stripe
         await stripe.subscriptions.update(subscriptionId, {
-            cancel_at_period_end: true
+            cancel_at_period_end: true,
         });
         return NextResponse.json({ message: "successful cancellation" }, { status: 200 });
     } catch (error) {

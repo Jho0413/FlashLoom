@@ -1,57 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import { useSession, useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { useSession } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
+import PageShell from "../components/common/pageShell";
 import LoadingPage from "../components/common/loadingPage";
 import ErrorPage from "../components/common/errorPage";
-import FlashCardList from "../generate/flashcardList";
-import PageBodyLayout from "../components/common/pageBodyLayout";
 import SessionModal from "../components/common/sessionModal";
+import FlashcardList from "../generate/flashcardList";
 
-export default function Flashcard({ searchParams }) {
+export default function FlashcardSetPage({ searchParams }) {
   const { isLoaded, session } = useSession();
-  const { id: flashcardSetId, name } = searchParams;
-  const [flippedStates, setFlippedStates] = useState({});
-
-  const fetchFlashcardSet = async () => {
-    const token = await session.getToken();
-    const response = await fetch(`/api/flashcards/${flashcardSetId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    if (!response.ok)
-      throw new Error("Unable to fetch flashcardSet");
-    const data = await response.json();
-    return data;
-  }
+  const { id, name } = searchParams;
 
   const { isPending, isError, data } = useQuery({
-    queryFn: fetchFlashcardSet,
-    queryKey: [session?.user?.id, "flashcards", flashcardSetId],
-    staleTime: Infinity,
+    queryKey: [session?.user?.id, "flashcards", id],
+    queryFn: async () => {
+      const token = await session.getToken();
+      const response = await fetch(`/api/flashcards/${id}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Unable to fetch flashcard set");
+      return response.json();
+    },
     enabled: !!session,
+    staleTime: Infinity,
   });
 
-  if (!isLoaded) 
-    return <LoadingPage />
+  if (!isLoaded || (session && isPending)) return <LoadingPage />;
+  if (!session) return <SessionModal sessionExpired />;
+  if (isError) return <ErrorPage />;
 
-  if (!session) 
-    return <SessionModal sessionExpired={!session}/>
-  
-  if (isPending) 
-    return <LoadingPage />
-
-  if (isError)
-    return <ErrorPage />
-
-  const { flashcards } = data;
+  const cards = data.flashcards || [];
+  const title = data.name || name || "Flashcard set";
 
   return (
-    <PageBodyLayout title={name}>
-      <FlashCardList flashcards={flashcards} flippedStates={flippedStates} setFlippedStates={setFlippedStates}/>
-    </PageBodyLayout>
-  )
+    <PageShell width="library">
+      <Link href="/flashcards" className="mono-meta text-ink-faint hover:text-ink">
+        &larr; library
+      </Link>
+      <h1 className="mt-3 text-pretty text-[32px] font-semibold tracking-[-0.03em] text-ink">{title}</h1>
+      <p className="mt-1 text-[14.5px] text-ink-muted">{cards.length} cards</p>
+
+      <div className="mt-8">
+        <FlashcardList flashcards={cards} />
+      </div>
+    </PageShell>
+  );
 }

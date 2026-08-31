@@ -1,19 +1,10 @@
-import { Box, CircularProgress } from "@mui/material";
+import Spinner from "../ui/Spinner";
 
-const LoadingPage = ({ colour, size }) => {
+export default function LoadingPage({ label = "loading" }) {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <CircularProgress size={size} color={colour}/>
-    </Box>
-  )
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-ink-muted">
+      <Spinner size={22} />
+      <span className="mono-label">{label}</span>
+    </div>
+  );
 }
-
-export default LoadingPage;

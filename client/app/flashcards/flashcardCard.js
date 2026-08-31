@@ -1,124 +1,106 @@
 "use client";
 
 import { useState } from "react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { Fade, Grid, Card, IconButton, CardActionArea, CardContent, Typography, Modal, Box, Button } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@clerk/nextjs";
+import Dialog from "../components/ui/Dialog";
+import Button from "../components/ui/Button";
+import Menu from "../components/ui/Menu";
+import relativeTime from "../../utils/relativeTime";
 
-const FlashcardCard = ({ id, name, setLoading, setError }) => {
+export default function FlashcardCard({ id, name, cardCount, timestamp, setLoading, setError }) {
   const { session } = useSession();
-  const [confirmation, setConfirmation] = useState(false);
-  const queryClient = useQueryClient();
   const router = useRouter();
-  
-  const deleteFlashcardSet = async () => {
-    setConfirmation(false);
-    setLoading(true);
-    const token = await session.getToken();
-    const response = await fetch("/api/flashcards/delete", {
-      method: "POST",
-      body: JSON.stringify({
-        flashcardId: id,
-      }),
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) 
-      throw new Error("Unable to delete flashcard set");
-    return id;
-  }
-  
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+
+  const open = () => router.push(`/flashcard?id=${id}&name=${encodeURIComponent(name)}`);
+
   const mutation = useMutation({
-    mutationFn: deleteFlashcardSet,
     mutationKey: [session?.user?.id, "flashcards"],
-    onSuccess: (id) => {
-      queryClient.setQueryData([session?.user?.id, "flashcards"], (oldFlashcards) => {
-        return oldFlashcards?.filter((flashcard) => flashcard.id !== id)
+    mutationFn: async () => {
+      const token = await session.getToken();
+      const response = await fetch("/api/flashcards/delete", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ flashcardId: id }),
       });
+      if (!response.ok) throw new Error("Unable to delete flashcard set");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData([session?.user?.id, "flashcards"], (old) =>
+        (old || []).filter((set) => set.id !== id)
+      );
     },
     onError: () => setError(true),
     onSettled: () => setLoading(false),
   });
-  
-  return (
-    <Fade in timeout={200}>
-      <Grid item xs={12} sm={6} md={4}>
-        <Card sx={{ position: "relative", minHeight: 200 }}>
-          <IconButton
-            sx={{
-              position: "absolute",
-              top: 5,
-              right: 5,
-              zIndex: 2
-            }}
-            onClick={() => setConfirmation(true)}
-          >
-            <DeleteIcon />
-          </IconButton>
-          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push(`/flashcard?id=${id}&name=${name}`)}>
-            <CardContent
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 2,
-              }}
-            >
-              <Typography variant="h6">{name}</Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
-        <Modal 
-          open={confirmation}
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-              backgroundColor: "white",
-              paddingX: 4,
-              paddingY: 3,
-              borderRadius: 5,
-            }}
-          >
-            <Typography>Are you sure you want to delete the set: {name}?</Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row-reverse",
-                gap: 1,
-              }}
-            >
-              <Button 
-                variant="contained" 
-                color="error"
-                onClick={() => mutation.mutate(name)}
-              >
-                Delete
-              </Button>
-              <Button 
-                variant="text" 
-                color="inherit"
-                onClick={() => setConfirmation(false)}
-              >
-                Cancel
-              </Button>
-            </Box>
-          </Box>
-        </Modal>
-      </Grid>
-    </Fade>
-  )
-}
 
-export default FlashcardCard;
+  const confirmDelete = () => {
+    setConfirming(false);
+    setLoading(true);
+    mutation.mutate();
+  };
+
+  return (
+    <>
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={open}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") open();
+        }}
+        className="flex h-[152px] cursor-pointer flex-col justify-between rounded-lg border border-hairline bg-surface p-5.5 transition-[border-color,box-shadow] duration-150 hover:border-hairline-strong hover:shadow-tile"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-pretty text-[17px] font-semibold leading-[1.35] tracking-[-0.01em] text-ink">
+            {name}
+          </h3>
+          <Menu
+            trigger={
+              <button type="button" aria-label="Set options" className="font-mono text-ink-faint hover:text-ink">
+                ⋯
+              </button>
+            }
+            items={[
+              { label: "Rename", disabled: true },
+              { label: "Duplicate", disabled: true },
+              {
+                label: "Delete",
+                danger: true,
+                separatorBefore: true,
+                onClick: () => setConfirming(true),
+              },
+            ]}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="mono-meta text-ink-faint">
+            {cardCount ?? 0} cards · {relativeTime(timestamp)}
+          </span>
+          <span className="text-[12.5px] font-medium text-accent">Study &rarr;</span>
+        </div>
+      </div>
+
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title="Delete this set?"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete set
+            </Button>
+          </>
+        }
+      >
+        &ldquo;{name}&rdquo; and its {cardCount ?? 0} cards will be removed. This can&rsquo;t be undone.
+      </Dialog>
+    </>
+  );
+}

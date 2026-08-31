@@ -1,18 +1,15 @@
-import { SignIn } from '@clerk/nextjs';
-import { Box } from '@mui/material';
+import AuthShell from "../../components/common/authShell";
+import { ClerkSignIn } from "../../components/common/clerkAuth";
 
-export default function Page() {
+export const metadata = { title: "Sign in · FlashLoom" };
+
+export default function SignInPage() {
   return (
-    <Box 
-        sx={{
-            height: "100vh",
-            width: "100vw",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center"
-        }}
+    <AuthShell
+      heading="Pick up where you left off"
+      sub="Sign in to reach your saved sets and keep studying."
     >
-        <SignIn />
-    </Box>
-  )
+      <ClerkSignIn />
+    </AuthShell>
+  );
 }

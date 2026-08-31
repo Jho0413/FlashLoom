@@ -1,248 +1,250 @@
-'use client'
+"use client";
 
-import { Box, Tab, Button, Typography, Container } from "@mui/material";
-import { TabContext, TabPanel, TabList } from "@mui/lab";
-import InputField from "../components/flashcards/inputField";
-import { useState, useEffect, useRef } from "react";
-import LoadingModal from "../components/common/loadingModal";
-import ErrorModal from "../components/common/errorModal";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import PermissionDialog from "./permissionDialog";
-import { useSession, useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
+import InputField from "../components/flashcards/inputField";
 import DropFileInput from "./dropFileInput";
+import ErrorBanner from "../components/ui/ErrorBanner";
+import Button from "../components/ui/Button";
+import { cn } from "../components/ui/cn";
 
-const FlashcardForm = ({ setFlashcards, setFlippedStates }) => {
+const TABS = [
+  { key: "Basic", label: "Paste text" },
+  { key: "Youtube", label: "YouTube link" },
+  { key: "PDF", label: "Upload PDF" },
+];
+
+const CHAR_LIMIT = 8000;
+const YOUTUBE_RE =
+  /^(https?:\/\/)?(www\.)?(youtube\.com\/(?:watch\?v=|v\/|embed\/|.+\?v=))([A-Za-z0-9_-]{11})(?:&t=\d+s)?$/;
+
+const EMPTY = {
+  Basic: { message: "" },
+  Youtube: { message: "", youtube_url: "" },
+  PDF: { message: "", file: null },
+};
+
+export default function FlashcardForm({
+  subscription,
+  onGenerated,
+  setGenerating,
+  setError,
+  submitRef,
+  onCanSubmitChange,
+  onAccessBlocked,
+}) {
   const { session } = useSession();
-  const [formData, setFormData] = useState({ message: "" });
-  const [tabName, setTabName] = useState("Basic");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [inputError, setInputError] = useState("");
-  const [access, setAccess] = useState(true);
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState("Basic");
+  const [formData, setFormData] = useState(EMPTY.Basic);
+  const [inputError, setInputError] = useState("");
+  const polling = useRef(false);
 
-  const isPolling = useRef(true);
-
-  useEffect(() => {
-    isPolling.current = true;
-    return () => { isPolling.current = false; };
+  useEffect(() => () => {
+    polling.current = false;
   }, []);
 
-  const handleTabChange = (event, newTab) => {
-    event.preventDefault();
-    switch (newTab) {
-      case "Basic":
-        setFormData({ message: "" });
-        break;
-      case "Youtube":
-        setFormData({ message: "", youtube_url: "" });
-        break;
-      case "PDF":
-        setFormData({ file: null, message: "" });
-        break;
-      default:
-        break;
-    }
+  const changeTab = (key) => {
+    setTab(key);
+    setFormData(EMPTY[key]);
     setInputError("");
-    setTabName(newTab);
-  }
+  };
 
-  const handleSubmit = async () => {
-    // access checking
-    const subscriptionData = queryClient.getQueryData([session.user.id, "subscriptionData"]);
-    const { plan, generations, subscriptionEndTime } = subscriptionData;
-    if ((plan !== "Free" || generations >= 3) && (plan === "Free" || Date.now() > subscriptionEndTime)) {
-      setAccess(false);
+  const chars = (formData.message || "").length;
+  const estCards = Math.max(1, Math.round(chars / 350));
+
+  let canSubmit;
+  if (tab === "Basic") canSubmit = formData.message.trim().length > 0;
+  else if (tab === "Youtube") canSubmit = YOUTUBE_RE.test((formData.youtube_url || "").trim());
+  else canSubmit = formData.file instanceof File;
+
+  const runGeneration = async () => {
+    const subData =
+      queryClient.getQueryData([session.user.id, "subscriptionData"]) || subscription;
+    const { plan, generations, subscriptionEndTime } = subData;
+    if (
+      (plan !== "Free" || generations >= 3) &&
+      (plan === "Free" || Date.now() > subscriptionEndTime)
+    ) {
+      onAccessBlocked(plan === "Free" ? "limit" : "lapsed");
       return;
     }
-    const newFormData = new FormData();
 
-    // form validation 
-    switch (tabName) {
-      case "Basic":
-        if (!formData.message.trim()) {
-          setInputError("Please fill out all required fields");
-          return;
-        }
-        break;
-      case "Youtube":
-        if (!formData.youtube_url.trim()) {
-          setInputError("Please fill out all required fields");
-          return;
-        }
-        const regex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(?:watch\?v=|v\/|embed\/|.+\?v=))([A-Za-z0-9_-]{11})(?:&t=\d+s)?$/;
-        if (!regex.test(formData.youtube_url)) {
-          setInputError("Please input a valid Youtube URL");
-          return;
-        }
-        newFormData.append("youtube_url", formData.youtube_url);
-        break;
-      case "PDF":
-        if (!formData.file || formData.file.type !== "application/pdf") {
-          setInputError("Please upload a valid PDF file");
-          return;
-        }
-        newFormData.append("file", formData.file);
-        break;
-      default: 
-        break;
+    const payload = new FormData();
+    if (tab === "Basic") {
+      if (!formData.message.trim()) {
+        setInputError("Please add some text to work from");
+        return;
+      }
+    } else if (tab === "Youtube") {
+      const url = (formData.youtube_url || "").trim();
+      if (!url) {
+        setInputError("Please enter a YouTube URL");
+        return;
+      }
+      if (!YOUTUBE_RE.test(url)) {
+        setInputError("That doesn't look like a valid YouTube URL");
+        return;
+      }
+      payload.append("youtube_url", url);
+    } else if (!(formData.file instanceof File) || formData.file.type !== "application/pdf") {
+      setInputError("Please upload a valid PDF file");
+      return;
+    } else {
+      payload.append("file", formData.file);
     }
 
-    // generating flashcards 
-    setLoading(true);
-    newFormData.append("message", formData.message);
-    newFormData.append("method", tabName);
-    newFormData.append("plan", plan);
+    setInputError("");
+    setGenerating(true);
+    payload.append("message", formData.message || "");
+    payload.append("method", tab);
+    payload.append("plan", plan);
 
     const token = await session.getToken();
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
-        body: newFormData,
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        body: payload,
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!response.ok) throw new Error("Unable to start generation");
+      const { task_id: taskId } = await response.json();
 
-      if (!response.ok) 
-        throw new Error("Unable to start generation task");
-
-      const { task_id } = await response.json();
-
-      const pollTaskStatus = async () => {
+      polling.current = true;
+      const poll = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/task-status/${task_id}`);
-          const data = await response.json();
-
-          if (!isPolling.current) return;
+          const statusRes = await fetch(
+            `${process.env.NEXT_PUBLIC_FLASK_API_URL}/task-status/${taskId}`
+          );
+          const data = await statusRes.json();
+          if (!polling.current) return;
 
           if (data.status === "SUCCESS") {
             if (plan === "Free") {
               await fetch("/api/increment-generations", {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
               });
-              queryClient.setQueryData([session.user.id, "subscriptionData"], (oldData) => ({
-                ...oldData,
-                generations: oldData.generations + 1
-              }));
+              queryClient.setQueryData([session.user.id, "subscriptionData"], (old) =>
+                old ? { ...old, generations: old.generations + 1 } : old
+              );
             }
-            setFlashcards(JSON.parse(data.flashcards));
-            setFlippedStates({});
-            isPolling.current = false;
-            setLoading(false);
+            onGenerated(JSON.parse(data.flashcards));
+            polling.current = false;
+            setGenerating(false);
           } else if (data.status === "FAILURE") {
-            throw new Error("Task failed: " + data.error); 
+            throw new Error(data.error || "Generation failed");
           } else {
-            setTimeout(pollTaskStatus, 2000);
+            setTimeout(poll, 2000);
           }
-        } catch (pollErr) {
-          console.error("Error polling task:", pollErr);
-          setLoading(false);
-          setError(true); 
-          isPolling.current = false;
+        } catch {
+          polling.current = false;
+          setGenerating(false);
+          setError(true);
         }
       };
-
-      pollTaskStatus();
-    } catch (error) {
-      console.error("Error generating flashcards:", error);
-      setLoading(false);
+      poll();
+    } catch {
+      setGenerating(false);
       setError(true);
-    } finally {
-      setInputError("");
     }
-  }
+  };
 
-  const renderTabContent = () => {
-    switch (tabName) {
-      case "Basic":
-        return (
-          <InputField 
-            name="message"
-            label="Enter your text"
-            rows={4}
-            value={formData}
-            setValue={setFormData}
-            required
-          />
-        );
-      case "Youtube":
-        return (
-          <Box>
-            <InputField 
-              name="youtube_url"
-              label="Enter a youtube url"
-              rows={1}
-              value={formData}
-              setValue={setFormData}
-              required
-            />
-            <InputField 
-              name="message"
-              label="Enter additional information for better generation (Optional)"
-              rows={4}
-              value={formData}
-              setValue={setFormData}
-            />
-          </Box>
-        );
-      case "PDF":
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <DropFileInput formData={formData} setFormData={setFormData} setInputError={setInputError}/>
-            <InputField 
-              name="message"
-              label="Enter additional information for better generation (Optional)"
-              rows={4}
-              value={formData}
-              setValue={setFormData}
-              required={false}
-            />
-          </Box>
-        );
-      default:
-        return null;
-    }
-  }
+  useEffect(() => {
+    if (submitRef) submitRef.current = runGeneration;
+  });
+
+  useEffect(() => {
+    onCanSubmitChange?.(canSubmit);
+  }, [canSubmit, onCanSubmitChange]);
 
   return (
-    <Box 
-      sx={{ 
-        display: "flex", 
-        flexDirection: "column", 
-        gap: 1,
-      }}
-    >
-      <TabContext value={tabName}>
-        <Box>
-          <TabList onChange={handleTabChange} variant="fullWidth" centered>
-            <Tab label="Basic" value="Basic" sx={{ color: 'white' }} />
-            <Tab label="Youtube" value="Youtube" sx={{ color: 'white' }} />
-            <Tab label="PDF" value="PDF" sx={{ color: 'white' }} />
-          </TabList>
-        </Box>
-        <TabPanel value={tabName}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {inputError && <Typography fontWeight="bold" color="error">{inputError}</Typography>}
-            {renderTabContent()}
-          </Box>
-        </TabPanel>
-      </TabContext>
-      <Container sx={{ display: "flex", justifyContent: "center" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-        >
-          Generate Flashcards
-        </Button>
-      </Container>
-      <LoadingModal loading={loading} />
-      <ErrorModal error={error} setError={setError} />
-      <PermissionDialog access={access} />
-    </Box>
-  )
-}
+    <div className="rounded-xl border border-hairline bg-surface">
+      <div className="flex border-b border-rule">
+        {TABS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => changeTab(item.key)}
+            className={cn(
+              "border-b-2 px-5 py-4 text-[13px] font-medium transition-colors",
+              tab === item.key
+                ? "border-accent text-ink"
+                : "border-transparent text-ink-muted hover:text-ink"
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
-export default FlashcardForm;
+      <div className="flex flex-col gap-4 p-5.5">
+        <ErrorBanner>{inputError}</ErrorBanner>
+
+        {tab === "Basic" ? (
+          <InputField
+            name="message"
+            label="Your material"
+            value={formData}
+            setValue={setFormData}
+            minHeight={132}
+            maxLength={CHAR_LIMIT}
+            placeholder="Paste lecture notes, an article, a chapter…"
+          />
+        ) : null}
+
+        {tab === "Youtube" ? (
+          <>
+            <InputField
+              type="input"
+              name="youtube_url"
+              label="YouTube URL"
+              value={formData}
+              setValue={setFormData}
+              placeholder="https://youtube.com/watch?v=…"
+            />
+            <InputField
+              name="message"
+              label="Extra context (optional)"
+              value={formData}
+              setValue={setFormData}
+              minHeight={88}
+              placeholder="Anything that should steer the cards"
+            />
+          </>
+        ) : null}
+
+        {tab === "PDF" ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <span className="mono-label">PDF file</span>
+              <DropFileInput
+                formData={formData}
+                setFormData={setFormData}
+                setInputError={setInputError}
+              />
+            </div>
+            <InputField
+              name="message"
+              label="Extra context (optional)"
+              value={formData}
+              setValue={setFormData}
+              minHeight={88}
+              placeholder="Anything that should steer the cards"
+            />
+          </>
+        ) : null}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-rule px-5.5 py-4 max-[600px]:flex-col max-[600px]:items-stretch max-[600px]:gap-3">
+        <span className="mono-meta text-ink-faint">
+          {chars.toLocaleString()} / {CHAR_LIMIT.toLocaleString()} chars · est. {estCards} cards
+        </span>
+        <Button onClick={runGeneration} disabled={!canSubmit}>
+          Generate flashcards
+        </Button>
+      </div>
+    </div>
+  );
+}

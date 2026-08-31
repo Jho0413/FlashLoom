@@ -1,34 +1,50 @@
-import { TextField } from "@mui/material";
+const SHARED =
+  "w-full rounded-md border border-hairline bg-surface-sunken p-4 text-[14.5px] leading-[1.7] text-ink placeholder:text-ink-faint focus-visible:border-accent";
 
-const InputField = ({ name, label, rows, value, setValue, required }) => {
+export default function InputField({
+  name,
+  label,
+  value,
+  setValue,
+  type = "textarea",
+  rows = 4,
+  minHeight,
+  maxLength,
+  placeholder,
+  required = false,
+}) {
+  const onChange = (event) =>
+    setValue((prev) => ({ ...prev, [name]: event.target.value }));
+
   return (
-    <TextField
-      name={name}
-      value={value[name]}
-      onChange={(e) => setValue(prev => (
-        {...prev, [e.target.name]: e.target.value}
-      ))}
-      label={label}
-      fullWidth
-      multiline
-      rows={rows}
-      required={required}
-      variant="outlined"
-      sx={{ 
-        mb: 2, 
-        color: "white",
-        "& .MuiInputLabel-root": { color: 'white' }, 
-        "& .MuiInputLabel-root.Mui-focused": { color: "rgb(21, 101, 192)" },
-        "& .MuiOutlinedInput-root": { "& > fieldset": { borderColor: "white" }},
-        "&:hover .MuiOutlinedInput-root": { "& > fieldset": { borderColor: "rgb(21, 101, 192)" }},
-      }}
-      inputProps={{
-        style: { 
-          color: "white",
-        },
-      }}
-    />
-  )
+    <label className="block">
+      <span className="mono-label">{label}</span>
+      <div className="mt-2">
+        {type === "input" ? (
+          <input
+            type="text"
+            name={name}
+            value={value[name] || ""}
+            onChange={onChange}
+            required={required}
+            maxLength={maxLength}
+            placeholder={placeholder}
+            className={SHARED}
+          />
+        ) : (
+          <textarea
+            name={name}
+            value={value[name] || ""}
+            onChange={onChange}
+            rows={rows}
+            required={required}
+            maxLength={maxLength}
+            placeholder={placeholder}
+            style={minHeight ? { minHeight } : undefined}
+            className={`${SHARED} resize-y`}
+          />
+        )}
+      </div>
+    </label>
+  );
 }
-
-export default InputField;

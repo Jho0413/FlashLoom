@@ -1,31 +1,14 @@
-import { Grid } from "@mui/material";
-import Flashcard from "./flashcard";
+import FlashcardGrid from "../components/ui/FlashcardGrid";
+import Flashcard from "../components/ui/Flashcard";
 
-const FlashCardList = ({ flashcards, flippedStates, setFlippedStates }) => {
+export default function FlashcardList({ flashcards }) {
+  if (!flashcards || flashcards.length === 0) return null;
 
-  const handleCardClick = (index) => {
-    setFlippedStates((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
-  if (flashcards.length > 0) {
-    return (
-      <Grid container spacing={2}>
-        {flashcards.map((flashcard, index) => (
-          <Flashcard 
-            key={index}
-            {...flashcard}
-            flipped={flippedStates[index]}
-            handleCardClick={handleCardClick}
-            index={index}
-          />
-        ))}
-      </Grid>
-    );
-  }
-  return <div></div>
+  return (
+    <FlashcardGrid>
+      {flashcards.map((card, index) => (
+        <Flashcard key={index} index={index} front={card.front} back={card.back} />
+      ))}
+    </FlashcardGrid>
+  );
 }
-
-export default FlashCardList;

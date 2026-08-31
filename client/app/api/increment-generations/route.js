@@ -1,7 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/firebase";
-import { doc, increment, updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { db, FieldValue } from "@/firebaseAdmin";
 
 export async function POST() {
   try {
@@ -10,14 +9,13 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const docRef = doc(db, "users", userId);
-    await updateDoc(docRef, {
-      generations: increment(1),
+    await db.collection("users").doc(userId).update({
+      generations: FieldValue.increment(1),
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("Error incrementing generations:", err);
+  } catch (error) {
+    console.error("Error incrementing generations:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

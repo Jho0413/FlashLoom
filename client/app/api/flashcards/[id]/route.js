@@ -1,7 +1,6 @@
-import { db } from "@/firebase";
-import { auth } from "@clerk/nextjs/server";
-import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/firebaseAdmin";
 
 export async function GET(req, { params }) {
     const { id } = params;
@@ -12,11 +11,19 @@ export async function GET(req, { params }) {
     }
 
     try {
-        const docRef = doc(db, "users", userId, "flashcardSets", id);
-        const docSnapShot = await getDoc(docRef);
-        const data = docSnapShot.data();
-        return NextResponse.json({ ...data }, { status: 200 });
+        const snapshot = await db
+            .collection("users")
+            .doc(userId)
+            .collection("flashcardSets")
+            .doc(id)
+            .get();
+
+        if (!snapshot.exists) {
+            return NextResponse.json({ error: "Flashcard set not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ ...snapshot.data() }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ error: error }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

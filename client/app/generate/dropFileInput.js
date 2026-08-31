@@ -1,88 +1,82 @@
-import React, { useRef } from 'react';
-import { Box, IconButton, Paper, Typography } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloseIcon from '@mui/icons-material/Close';
+"use client";
 
-const DropFileInput = ({ formData, setFormData, setInputError }) => {
+import { useRef, useState } from "react";
 
-  const fileInputRef = useRef(null);
+const MAX_BYTES = 20 * 1024 * 1024;
 
-  const handleFileUpload = (e) => {
-    e.preventDefault();
-    const file = e.target.files?.[0];
-    if (file && file.type && file.type === 'application/pdf') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [e.target.name]: file,
-      }));
-      setInputError("");
-    } else {
-      if (!formData.file)
-        setInputError("Please upload a valid PDF file");
-    }
-  }
-
-  const handleFileRemove = () => {
-    // updating formData
-    setFormData((prev) => ({ ...prev, file: null }));
-    // need to remove from input ref as well
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 1,
-      }}
-    >
-      <Paper
-        sx={{
-          padding: 4,
-          minHeight: "15rem",
-          textAlign: "center",
-          border: "2px dashed white",
-          borderRadius: 2,
-          backgroundColor: "transparent",
-          transition: "background-color 0.3s ease",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          "&:hover": { backgroundColor: "grey" },
-        }}
-        onClick={() => document.getElementById("fileInput").click()}
-      >
-        <CloudUploadIcon sx={{ fontSize: 50, color: "white" }} />
-        <Typography variant="h6" mt={2} color="white">
-          Click here to upload a file
-        </Typography>
-
-        <input
-          ref={fileInputRef}
-          id="fileInput"
-          type="file"
-          name="file"
-          hidden
-          onChange={handleFileUpload}
-        />
-      </Paper>
-      {formData.file && (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Typography variant="body2">
-            {formData.file.name}
-          </Typography>
-          <IconButton onClick={handleFileRemove}>
-            <CloseIcon sx={{ color: "red" }}/>
-          </IconButton>
-        </Box>
-      )}
-    </Box>
-  )
+function formatSize(bytes) {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-export default DropFileInput;
+export default function DropFileInput({ formData, setFormData, setInputError }) {
+  const inputRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+
+  const accept = (file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setInputError("Please upload a valid PDF file");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setInputError("That PDF is over the 20 MB limit");
+      return;
+    }
+    setInputError("");
+    setFormData((prev) => ({ ...prev, file }));
+  };
+
+  const remove = () => {
+    setFormData((prev) => ({ ...prev, file: null }));
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          accept(event.dataTransfer.files?.[0]);
+        }}
+        className={`flex min-h-[132px] flex-col items-center justify-center rounded-md border border-dashed px-4 text-center transition-colors ${
+          dragging ? "border-accent bg-surface-accent" : "border-hairline-strong bg-transparent"
+        }`}
+      >
+        <span className="mono-meta text-ink-muted">Drop a PDF or click to browse · max 20 MB</span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        name="file"
+        accept="application/pdf"
+        hidden
+        onChange={(event) => accept(event.target.files?.[0])}
+      />
+      {formData.file ? (
+        <div className="flex items-center justify-between rounded-md border border-hairline bg-surface-sunken px-3 py-2">
+          <span className="truncate text-[14px] font-medium text-ink">{formData.file.name}</span>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="mono-meta text-ink-faint">{formatSize(formData.file.size)}</span>
+            <button
+              type="button"
+              onClick={remove}
+              aria-label="Remove file"
+              className="font-mono text-ink-faint hover:text-ink"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

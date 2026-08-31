@@ -1,34 +1,23 @@
-import { Fade, Grid, Card, CardActionArea, CardContent, Typography } from "@mui/material";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+"use client";
+
 import { useRouter } from "next/navigation";
 
-const AddFlashcardCard = () => {
-
+export default function AddFlashcardCard() {
   const router = useRouter();
 
   return (
-    <Fade in timeout={200}>
-      <Grid item xs={12} sm={6} md={4}>
-        <Card sx={{ minHeight: 200 }}>
-          <CardActionArea sx={{ minHeight: 200 }} onClick={() => router.push("/generate")}>
-            <CardContent 
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 2,
-                flexDirection: "column",
-                gap: 1,
-              }}
-            >
-              <Typography variant="h6">Click here to create one!</Typography>
-              <AddCircleIcon />
-            </CardContent>
-          </CardActionArea>
-        </Card>
-      </Grid>
-    </Fade>
+    <button
+      type="button"
+      onClick={() => router.push("/generate")}
+      className="flex h-[152px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-hairline-strong transition-colors duration-150 hover:bg-surface"
+    >
+      <span
+        aria-hidden="true"
+        className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-hairline text-accent"
+      >
+        +
+      </span>
+      <span className="text-[13.5px] font-medium text-ink">New set</span>
+    </button>
   );
 }
-
-export default AddFlashcardCard;

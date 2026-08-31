@@ -1,18 +1,15 @@
-import { SignUp } from '@clerk/nextjs';
-import { Box } from '@mui/material';
+import AuthShell from "../../components/common/authShell";
+import { ClerkSignUp } from "../../components/common/clerkAuth";
 
-export default function Page() {
+export const metadata = { title: "Sign up · FlashLoom" };
+
+export default function SignUpPage() {
   return (
-    <Box 
-        sx={{
-            height: "100vh",
-            width: "100vw",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center"
-        }}
+    <AuthShell
+      heading="Three free generations, no card"
+      sub="Create an account and turn your first document into a flashcard set."
     >
-        <SignUp />
-    </Box>
-  )
+      <ClerkSignUp />
+    </AuthShell>
+  );
 }

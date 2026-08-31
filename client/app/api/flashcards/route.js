@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
+import { db } from "@/firebaseAdmin";
 
 export async function GET() {
     const { userId } = auth();
 
-    if (!userId) 
+    if (!userId)
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    
+
     try {
-        const docSnapshots = await getDocs(collection(db, "users", userId, "flashcardSets"));
-        const flashcards = [];
-        docSnapshots.forEach(document => {
-            const data = document.data();
-            flashcards.push({ id: document.id, name: data.name });
+        const snapshot = await db.collection("users").doc(userId).collection("flashcardSets").get();
+        const flashcards = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                name: data.name,
+                cardCount: Array.isArray(data.flashcards) ? data.flashcards.length : 0,
+                timestamp: data.timestamp?.toMillis?.() ?? null,
+            };
         });
-        return NextResponse.json({ flashcards: flashcards }, { status: 200 });
+        return NextResponse.json({ flashcards }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ error: error }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

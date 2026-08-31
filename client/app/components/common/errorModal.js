@@ -1,33 +1,21 @@
-import { Modal, Box, IconButton } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
-import ErrorPage from "./errorPage";
+"use client";
 
-const ErrorModal = ({ error, setError }) => {
+import Dialog from "../ui/Dialog";
+import Button from "../ui/Button";
+
+export default function ErrorModal({ error, setError }) {
   return (
-    <Modal 
-      open={error}
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+    <Dialog
+      open={!!error}
+      onClose={() => setError(false)}
+      title="Something went wrong"
+      actions={
+        <Button variant="secondary" onClick={() => setError(false)}>
+          Dismiss
+        </Button>
+      }
     >
-      <Box sx={{ position: "relative" }}>
-        <IconButton
-          sx={{
-            position: "absolute",
-            top: 5,
-            right: 5,
-            zIndex: 2
-          }}
-          onClick={() => setError(false)}
-        >
-          <CloseIcon />
-        </IconButton>
-        <ErrorPage disableButton/>
-      </Box>
-    </Modal>
-  )
+      We hit an issue completing that. Please try again in a moment.
+    </Dialog>
+  );
 }
-
-export default ErrorModal;

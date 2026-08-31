@@ -1,97 +1,89 @@
 "use client";
 
-import { useSession } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
-import {
-  Button,
-  Container,
-  Divider,
-  Typography,
-  Box,
-} from "@mui/material";
-import FeatureGrid from "./components/home/featuresGrid";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import Button from "./components/ui/Button";
+import FeaturesGrid from "./components/home/featuresGrid";
 import PricingGrid from "./components/home/pricingGrid";
 import FaqSection from "./components/home/faqSection";
-import { motion } from "framer-motion";
-import SessionModal from "./components/common/sessionModal";
+import Footer from "./components/home/footer";
+
+const SAMPLE_TEXT =
+  "The mitochondrion is the site of aerobic respiration in eukaryotic cells. Its inner membrane folds into cristae, increasing the surface area available for the electron transport chain. ATP synthase then uses the proton gradient across that membrane to phosphorylate ADP into ATP.";
+
+function HeroPreview() {
+  return (
+    <div
+      id="preview"
+      className="mx-auto mt-16 w-full max-w-[900px] scroll-mt-20 overflow-hidden rounded-xl border border-hairline bg-surface text-left"
+    >
+      <div className="flex border-b border-rule">
+        {["Paste text", "YouTube link", "Upload PDF"].map((label, index) => (
+          <span
+            key={label}
+            className={
+              index === 0
+                ? "border-b-2 border-accent px-5 py-3 text-[13px] font-medium text-ink"
+                : "px-5 py-3 text-[13px] font-medium text-ink-muted"
+            }
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+      <div className="p-5.5">
+        <span className="mono-label">Your material</span>
+        <div className="mt-2 rounded-md border border-hairline bg-surface-sunken p-4 text-[14.5px] leading-[1.7] text-ink-secondary">
+          {SAMPLE_TEXT}
+        </div>
+      </div>
+      <div className="flex items-center justify-between border-t border-rule px-5.5 py-4 max-[600px]:flex-col max-[600px]:items-start max-[600px]:gap-3">
+        <span className="mono-meta text-ink-faint">302 / 8,000 chars · est. 6 cards</span>
+        <span className="rounded bg-accent px-[22px] py-3 text-[14px] font-semibold text-accent-ink opacity-90">
+          Generate flashcards
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
-  const router = useRouter();
-  const { isSignedIn, session } = useSession();
-  const [sessionExpired, setSessionExpired] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn) {
-      setLoggedIn(true);
-    }
-
-    if (loggedIn && !session) {
-      setSessionExpired(true);
-    }
-  }, [isSignedIn, session, loggedIn]);
-
-  const handleGetStartedClick = () => {
-    if (isSignedIn) {
-      router.push(`/generate`); // Redirect to Generate page if signed in
-    } else {
-      router.push("/sign-up"); // Redirect to Sign-up page if not signed in
-    }
-  };
+  const { isSignedIn } = useAuth();
+  const startHref = isSignedIn ? "/generate" : "/sign-up";
 
   return (
-    <Container maxWidth="lg" sx={{ pt: 10, pb: 10 }}>
-      <Box
-        gap={5}
-        sx={{
-          height: "100%",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          mt: 10,
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
-          <Typography variant="h3" fontWeight="700">
-            Welcome to FlashLoom
-          </Typography>
-          <Typography variant="h6" fontWeight="bold" sx={{ m: 3 }}>
-            Revolutionize your learning experience with our innovative
-            AI-curated interactive flashcards, designed to elevate your
-            knowledge retention and engagement!
-          </Typography>
+    <div>
+      <section className="grid-surface">
+        <div className="mx-auto max-w-hero px-10 py-23 text-center max-[600px]:px-5 max-[600px]:py-16">
+          <span className="mono-eyebrow text-accent">text · pdf · youtube &rarr; flashcards</span>
+          <h1 className="mx-auto mt-5 max-w-[720px] text-balance text-[66px] font-semibold leading-[1.04] tracking-[-0.035em] text-ink max-[900px]:text-[44px] max-[600px]:text-[34px]">
+            Study material in.
+            <br />
+            Flashcards out.
+          </h1>
+          <p className="mx-auto mt-5 max-w-[560px] text-pretty text-[17.5px] leading-[1.65] text-ink-muted">
+            Paste your notes, drop a PDF, or link a lecture. FlashLoom turns it into a clean set of
+            question-and-answer cards you can study in minutes.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-3 max-[600px]:flex-col">
+            <Button href={startHref}>Get started</Button>
+            <Button href="#preview" variant="secondary">
+              View a sample deck
+            </Button>
+          </div>
+          <HeroPreview />
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          style={{ textAlign: "center" }}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              borderRadius: 5,
-              backgroundColor: "#5c84f8",
-              "&:hover": {
-                backgroundColor: "#4a6abf",
-              },
-            }}
-            onClick={handleGetStartedClick}
-          >
-            Get Started
-          </Button>
-        </motion.div>
-        <Divider sx={{ borderColor: "white" }} />
-        <FeatureGrid />
-        <Divider sx={{ borderColor: "white" }} />
-        <PricingGrid />
-        <Divider sx={{ borderColor: "white" }} />
+      </section>
+
+      <section className="border-t border-rule">
+        <FeaturesGrid />
+      </section>
+      <section id="pricing" className="scroll-mt-16 border-t border-rule">
+        <PricingGrid isSignedIn={isSignedIn} />
+      </section>
+      <section className="border-t border-rule">
         <FaqSection />
-      </Box>
-      <SessionModal sessionExpired={sessionExpired}/>
-    </Container>
+      </section>
+      <Footer />
+    </div>
   );
 }

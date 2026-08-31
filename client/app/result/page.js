@@ -1,89 +1,67 @@
-'use client'
-import {useEffect, useState} from 'react'
-import {useRouter} from 'next/navigation'
-import { Typography, Container, Button } from '@mui/material'
-import LoadingPage from '../components/common/loadingPage'
-import ErrorPage from '../components/common/errorPage'
+"use client";
 
-const ResultPage = ({ searchParams }) => {
-    const { session_id } = searchParams;
-    const [session, setSession] = useState(true);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+import { useEffect, useState } from "react";
+import Button from "../components/ui/Button";
+import LoadingPage from "../components/common/loadingPage";
+import ErrorPage from "../components/common/errorPage";
 
-    useEffect(() => {
-        const fetchCheckoutSession = async () => {
-            if (!session_id) return
-            try {
-                const response = await fetch(`/api/checkout_sessions?session_id=${session_id}`);
-                const data = await response.json();
-                if (response.ok) {
-                    setSession(data);
-                } else {
-                    setError(data.error);
-                }
-            } catch (err) {
-                setError('An error occurred while fetching the checkout session');
-            }
-            finally {
-                setLoading(false);
-            }
-        }
-        fetchCheckoutSession();
-    }, [session_id])
-    
-    if (loading) {
-        return <LoadingPage />
+export default function ResultPage({ searchParams }) {
+  const { session_id: sessionId } = searchParams;
+  const [status, setStatus] = useState("loading");
+  const [paid, setPaid] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setStatus("error");
+      return;
     }
-    if (error) {
-        return <ErrorPage />
-    }
+    const run = async () => {
+      try {
+        const response = await fetch(`/api/checkout_sessions?session_id=${sessionId}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Checkout lookup failed");
+        setPaid(data.payment_status === "paid");
+        setStatus("done");
+      } catch {
+        setStatus("error");
+      }
+    };
+    run();
+  }, [sessionId]);
 
-    return (
-        <Container 
-          maxwidth="100vw" 
-          sx={{
-            height: "100vh", 
-            overflowY: 'auto', 
-          }}>
-            {session.payment_status === 'paid' ? (
-                <ResultContent 
-                  header="Payment Succeeded!"
-                  body="We have received your payment. Go generate flashcards to start using your subscription!"
-                />
-            ) : (
-                <ResultContent 
-                  header="Payment Failed :("
-                  body="Your payment was not successful. Please try again!"
-                />
-            )}
-        </Container>
-)}
-
-
-const ResultContent = ({ header, body }) => {
-  const router  = useRouter();
+  if (status === "loading") return <LoadingPage />;
+  if (status === "error") return <ErrorPage />;
 
   return (
-    <Container
-      maxWidth="md"
-      sx={{
-        height: "100%",
-        textAlign: "center",
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-    >
-      <Typography variant='h3'>{header}</Typography>
-      <Typography variant="body1">{body}</Typography>
-      <Button variant="contained" onClick={() => router.push('/')}>
-        Back to Main Page
-      </Button>
-    </Container>
-  )
+    <div className="mx-auto max-w-[460px] px-5 pb-23 pt-[120px] text-center">
+      <span
+        aria-hidden="true"
+        className={`mx-auto flex h-[30px] w-[30px] items-center justify-center rounded-full border font-mono text-[14px] ${
+          paid ? "border-accent-border text-accent" : "border-danger-border text-danger"
+        }`}
+      >
+        {paid ? "✓" : "!"}
+      </span>
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.02em] text-ink">
+        {paid ? "You’re subscribed" : "Something went wrong"}
+      </h1>
+      <p className="mx-auto mt-2 max-w-[340px] text-pretty text-[14px] text-ink-muted">
+        {paid
+          ? "Your payment went through. Your plan is active and ready to use."
+          : "Your payment didn’t complete. You can try again from the pricing page."}
+      </p>
+      <div className="mt-6 flex justify-center gap-3">
+        {paid ? (
+          <Button href="/generate">Go generate flashcards</Button>
+        ) : (
+          <>
+            <Button href="/#pricing">Try again</Button>
+            <Button href="/flashcards" variant="secondary">
+              Back to library
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
-
-export default ResultPage;

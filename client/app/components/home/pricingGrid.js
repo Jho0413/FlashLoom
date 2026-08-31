@@ -1,147 +1,89 @@
 "use client";
-import {
-  Box,
-  Grid,
-  Typography,
-  Button,
-  Divider,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+
 import { useRouter } from "next/navigation";
+import { useSession } from "@clerk/nextjs";
 import { pricingDescriptions } from "../../../utils/pricingDescriptions";
 import getStripe from "@/utils/get-stripe";
-import { motion } from "framer-motion";
-import { useSession } from "@clerk/nextjs";
+import { cn } from "../ui/cn";
 
-const PricingGridItem = ({ title, price, description, disabled }) => {
-  const { isSignedIn, session } = useSession();
+const CHIPS = { Basic: "popular", Pro: "soon" };
+
+function TierCard({ tier, isSignedIn }) {
+  const { session } = useSession();
   const router = useRouter();
+  const [amount, cadence] = tier.price.split(" / ");
+  const chip = CHIPS[tier.title];
+  const featured = tier.title === "Basic";
 
   const selectPlan = async () => {
-    if (disabled) return;
-
+    if (tier.disabled) return;
     if (!isSignedIn) {
       router.push("/sign-up");
       return;
     }
-
-    if (title === "Free Trial") {
+    if (tier.title === "Free Trial") {
       router.push("/generate");
       return;
     }
     const token = await session.getToken();
     const checkoutSession = await fetch("/api/checkout_sessions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ plan: title })
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ plan: tier.title }),
     });
-
-    const checkoutSessionJSON = await checkoutSession.json();
-
+    const { id } = await checkoutSession.json();
     const stripe = await getStripe();
-    await stripe.redirectToCheckout({ sessionId: checkoutSessionJSON.id });
+    await stripe.redirectToCheckout({ sessionId: id });
   };
 
   return (
-    <Grid
-      item
-      xs={12}
-      md={4}
-      lg={4}
-      sx={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        color: "white",
-      }}
+    <div
+      className={cn(
+        "flex flex-col gap-4 p-6.5",
+        featured ? "bg-surface-accent shadow-[inset_0_2px_0_var(--accent)]" : "bg-surface"
+      )}
     >
-      <motion.div
-        whileHover={disabled ? {} : { scale: 1.05 }}
-        whileTap={disabled ? {} : { scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+      <div className="flex items-center justify-between">
+        <span className="mono-label">{tier.title}</span>
+        {chip ? (
+          <span className="rounded-[999px] border border-hairline px-2 py-[3px] font-mono text-[10.5px] lowercase text-ink-muted">
+            {chip}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="text-[34px] font-semibold tracking-[-0.03em] text-ink">{amount}</span>
+        <span className="text-[14px] text-ink-muted">/ {cadence}</span>
+      </div>
+      <p className="flex-1 text-pretty text-[14px] leading-[1.6] text-ink-muted">{tier.description}</p>
+      <button
+        type="button"
+        onClick={selectPlan}
+        disabled={tier.disabled}
+        className={cn(
+          "min-h-[44px] rounded px-4 text-[13.5px] font-semibold transition-[background-color,filter] duration-150",
+          tier.disabled && "cursor-not-allowed border border-hairline bg-surface text-ink-faint",
+          !tier.disabled && featured && "bg-accent text-accent-ink hover:brightness-[1.08]",
+          !tier.disabled && !featured && "border border-hairline-strong text-ink hover:bg-surface"
+        )}
       >
-        <Box
-          sx={{
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            minHeight: 280,
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-            border: "1px solid #333",
-            borderRadius: 5,
-            backgroundColor: "#1e1e1e",
-            cursor: disabled ? null : "pointer",
-            "&:hover": {
-              backgroundColor: disabled ? "#1e1e1e" : "#292929",
-            },
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" sx={{ color: "#5c84f8" }}>
-            {title}
-          </Typography>
-          <Divider sx={{ bgcolor: "#5c84f8", mb: 2 }} />
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            {price}
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 3 }}>
-            {description}
-          </Typography>
-          <Button
-            variant="contained"
-            size="medium"
-            onClick={selectPlan}
-            sx={{
-              backgroundColor: "#5c84f8",
-              "&:hover": {
-                backgroundColor: disabled ? "#5c84f8" : "#4b72d6",
-              },
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
-          >
-            Choose {title}
-          </Button>
-        </Box>
-      </motion.div>
-    </Grid>
+        {tier.disabled ? "Coming soon" : `Choose ${tier.title}`}
+      </button>
+    </div>
   );
-};
+}
 
-const PricingGrid = () => {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
+export default function PricingGrid({ isSignedIn }) {
   return (
-    <Box
-      sx={{
-        py: 5,
-        px: isSmallScreen ? 2 : 5,
-        backgroundColor: "#121212",
-        borderRadius: 4,
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 4,
-          color: "#5c84f8",
-          fontWeight: "bold",
-          textAlign: "center",
-        }}
-      >
-        Pricing
-      </Typography>
-      <Grid container spacing={3}>
-        {pricingDescriptions.map((pricing) => (
-          <PricingGridItem key={pricing.title} {...pricing} />
-        ))}
-      </Grid>
-    </Box>
+    <div className="mx-auto max-w-[1060px] px-10 py-20 max-[600px]:px-5">
+      <h2 className="text-[30px] font-semibold tracking-[-0.025em] text-ink">Pricing</h2>
+      <div className="mt-8 overflow-hidden rounded-xl border border-hairline bg-hairline">
+        <div className="grid grid-cols-3 gap-px max-[600px]:grid-cols-1">
+          {pricingDescriptions.map((tier) => (
+            <TierCard key={tier.title} tier={tier} isSignedIn={isSignedIn} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
-};
-
-export default PricingGrid;
+}

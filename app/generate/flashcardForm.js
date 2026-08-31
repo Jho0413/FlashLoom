@@ -101,12 +101,11 @@ export default function FlashcardForm({
     payload.append("method", tab);
     payload.append("plan", plan);
 
-    const token = await session.getToken();
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         body: payload,
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${await session.getToken()}` },
       });
       if (!response.ok) throw new Error("Unable to start generation");
       const { task_id: taskId } = await response.json();
@@ -118,7 +117,7 @@ export default function FlashcardForm({
           if (Date.now() > deadline) throw new Error("Generation timed out");
 
           const statusRes = await fetch(`/api/generate/status/${taskId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${await session.getToken()}` },
           });
           if (!statusRes.ok) throw new Error("Unable to check generation status");
           const data = await statusRes.json();
@@ -128,7 +127,7 @@ export default function FlashcardForm({
             if (plan === "Free") {
               await fetch("/api/increment-generations", {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `Bearer ${await session.getToken()}` },
               });
               queryClient.setQueryData([session.user.id, "subscriptionData"], (old) =>
                 old ? { ...old, generations: old.generations + 1 } : old

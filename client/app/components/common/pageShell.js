@@ -7,10 +7,8 @@ const WIDTHS = {
   subscription: "max-w-subscription",
 };
 
-export default function PageShell({ width = "generate", pt = "pt-12", className, children }) {
+export default function PageShell({ width = "generate", pt = "pt-12", children }) {
   return (
-    <main className={cn("mx-auto px-10 pb-23 max-[600px]:px-5", pt, WIDTHS[width], className)}>
-      {children}
-    </main>
+    <main className={cn("mx-auto px-10 pb-23 max-[600px]:px-5", pt, WIDTHS[width])}>{children}</main>
   );
 }

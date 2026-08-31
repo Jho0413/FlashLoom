@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "./cn";
 
-export default function Menu({ trigger, items, align = "right" }) {
+export default function Menu({ trigger, items }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -39,10 +39,7 @@ export default function Menu({ trigger, items, align = "right" }) {
       {open ? (
         <div
           role="menu"
-          className={cn(
-            "absolute top-full z-20 mt-1 w-[168px] rounded-md border border-hairline bg-surface p-[5px] shadow-menu",
-            align === "right" ? "right-0" : "left-0"
-          )}
+          className="absolute right-0 top-full z-20 mt-1 w-[168px] rounded-md border border-hairline bg-surface p-[5px] shadow-menu"
         >
           {items.map((item) => (
             <div key={item.label}>

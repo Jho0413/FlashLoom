@@ -7,14 +7,11 @@ export default function InputField({
   value,
   setValue,
   type = "textarea",
-  rows = 4,
   minHeight,
   maxLength,
   placeholder,
-  required = false,
 }) {
-  const onChange = (event) =>
-    setValue((prev) => ({ ...prev, [name]: event.target.value }));
+  const onChange = (event) => setValue((prev) => ({ ...prev, [name]: event.target.value }));
 
   return (
     <label className="block">
@@ -26,7 +23,6 @@ export default function InputField({
             name={name}
             value={value[name] || ""}
             onChange={onChange}
-            required={required}
             maxLength={maxLength}
             placeholder={placeholder}
             className={SHARED}
@@ -36,8 +32,6 @@ export default function InputField({
             name={name}
             value={value[name] || ""}
             onChange={onChange}
-            rows={rows}
-            required={required}
             maxLength={maxLength}
             placeholder={placeholder}
             style={minHeight ? { minHeight } : undefined}

@@ -2,12 +2,6 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "./cn";
-
-const SIZES = {
-  default: "max-w-[460px]",
-  wide: "max-w-[620px]",
-};
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -17,7 +11,6 @@ export default function Dialog({
   onClose,
   title,
   titleId = "dialog-title",
-  size = "default",
   dismissable = true,
   children,
   actions,
@@ -85,11 +78,7 @@ export default function Dialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
-        className={cn(
-          "relative w-full rounded-xl border border-hairline bg-surface p-6.5 shadow-dialog",
-          "max-[600px]:rounded-b-none max-[600px]:rounded-t-xl",
-          SIZES[size]
-        )}
+        className="relative w-full max-w-[460px] rounded-xl border border-hairline bg-surface p-6.5 shadow-dialog max-[600px]:rounded-b-none max-[600px]:rounded-t-xl"
       >
         {title ? (
           <h2 id={titleId} className="text-[18px] font-semibold tracking-[-0.02em] text-ink">

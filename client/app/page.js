@@ -5,7 +5,6 @@ import Button from "./components/ui/Button";
 import FeaturesGrid from "./components/home/featuresGrid";
 import PricingGrid from "./components/home/pricingGrid";
 import FaqSection from "./components/home/faqSection";
-import Footer from "./components/home/footer";
 
 const SAMPLE_TEXT =
   "The mitochondrion is the site of aerobic respiration in eukaryotic cells. Its inner membrane folds into cristae, increasing the surface area available for the electron transport chain. ATP synthase then uses the proton gradient across that membrane to phosphorylate ADP into ATP.";
@@ -83,7 +82,6 @@ export default function Home() {
       <section className="border-t border-rule">
         <FaqSection />
       </section>
-      <Footer />
     </div>
   );
 }

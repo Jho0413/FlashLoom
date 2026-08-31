@@ -160,6 +160,10 @@ body {
   perspective: 1200px;
 }
 
+.flashcard--study {
+  height: 340px;
+}
+
 .flashcard__inner {
   position: relative;
   width: 100%;
@@ -197,6 +201,10 @@ body {
 @media (max-width: 600px) {
   .flashcard {
     height: 200px;
+  }
+
+  .flashcard--study {
+    height: 300px;
   }
 }
 

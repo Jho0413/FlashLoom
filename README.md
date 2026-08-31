@@ -32,6 +32,7 @@ Deployed on **Vercel**: https://flash-loom.vercel.app/. It is a **cloud-based Sa
   - **Inngest**: runs the generation pipeline as a durable background function (queue, retries, observability)
   - **Google Gemini**: the LLM
   - **Pinecone**: vector store with integrated embeddings + reranking, for RAG on PDF/YouTube content
+  - **Supadata**: YouTube transcript retrieval
 
 ## Local development
 
@@ -67,6 +68,7 @@ GOOGLE_API_KEY=...
 GEMINI_MODEL=gemini-3.5-flash-lite
 PINECONE_API_KEY=...
 PINECONE_INDEX_NAME=flashloom
+SUPADATA_API_KEY=...   # YouTube transcripts (supadata.ai)
 
 # Inngest: local only
 INNGEST_DEV=1

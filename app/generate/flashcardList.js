@@ -7,7 +7,7 @@ export default function FlashcardList({ flashcards }) {
   return (
     <FlashcardGrid>
       {flashcards.map((card, index) => (
-        <Flashcard key={index} index={index} front={card.front} back={card.back} />
+        <Flashcard key={`${index}:${card.front}`} index={index} front={card.front} back={card.back} />
       ))}
     </FlashcardGrid>
   );

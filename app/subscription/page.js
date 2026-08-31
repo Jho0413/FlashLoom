@@ -79,7 +79,7 @@ export default function SubscriptionPage() {
           {loading ? (
             <Shimmer />
           ) : (
-            <span>{data.subscriptionEndTime ? formatUnixToDate(data.subscriptionEndTime) : "—"}</span>
+            <span>{data.subscriptionEndTime ? formatUnixToDate(data.subscriptionEndTime) : "Not set"}</span>
           )}
         </Row>
 

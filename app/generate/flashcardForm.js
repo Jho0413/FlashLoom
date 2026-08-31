@@ -107,7 +107,10 @@ export default function FlashcardForm({
         body: payload,
         headers: { Authorization: `Bearer ${await session.getToken()}` },
       });
-      if (!response.ok) throw new Error("Unable to start generation");
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Unable to start generation");
+      }
       const { task_id: taskId } = await response.json();
 
       polling.current = true;
@@ -142,6 +145,7 @@ export default function FlashcardForm({
             setTimeout(poll, 2000);
           }
         } catch (err) {
+          console.error("Generation failed:", err);
           polling.current = false;
           setGenerating(false);
           setError(err?.message || true);
@@ -149,6 +153,7 @@ export default function FlashcardForm({
       };
       poll();
     } catch (err) {
+      console.error("Generation failed:", err);
       setGenerating(false);
       setError(err?.message || true);
     }

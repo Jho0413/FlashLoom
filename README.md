@@ -29,9 +29,9 @@ Deployed on **Vercel**: https://flash-loom.vercel.app/. It is a **cloud-based Sa
 - **Database**: Firestore (accessed server-side via the Firebase Admin SDK)
 - **Payments**: Stripe
 - **Flashcard generation**:
-  - **Inngest** — runs the generation pipeline as a durable background function (queue, retries, observability)
-  - **Google Gemini** — the LLM
-  - **Pinecone** — vector store with integrated embeddings + reranking, for RAG on PDF/YouTube content
+  - **Inngest**: runs the generation pipeline as a durable background function (queue, retries, observability)
+  - **Google Gemini**: the LLM
+  - **Pinecone**: vector store with integrated embeddings + reranking, for RAG on PDF/YouTube content
 
 ## Local development
 
@@ -68,7 +68,7 @@ GEMINI_MODEL=gemini-3.5-flash-lite
 PINECONE_API_KEY=...
 PINECONE_INDEX_NAME=flashloom
 
-# Inngest — local only
+# Inngest: local only
 INNGEST_DEV=1
 ```
 

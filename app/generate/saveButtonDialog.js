@@ -120,7 +120,7 @@ export default function SaveButtonDialog({ flashcards, setError, setLoading, onR
             value={name}
             maxLength={NAME_LIMIT}
             onChange={(event) => setName(event.target.value)}
-            placeholder="e.g. Cell respiration — Lecture 4"
+            placeholder="e.g. Cell respiration, lecture 4"
             className="w-full rounded-md border border-hairline bg-surface-sunken p-3 text-[14px] text-ink placeholder:text-ink-faint focus-visible:border-accent"
           />
           <div className="mt-2 flex items-center justify-between">
